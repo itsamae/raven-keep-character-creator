@@ -53,6 +53,10 @@ function App() {
             onNext={() => setCurrentStep(5)} 
           />
         )}
+        
+        {currentStep === 5 && (
+          <div>Non-Combat Stats (Coming Soon)</div>
+        )}
       </div>
     </div>
   );
@@ -275,7 +279,6 @@ function DepartmentSelectionStep({ data, setData, onNext }) {
 }
 
 function CombatStatsStep({ data, setData, onNext }) {
-  // Initialize combat stats if they don't exist
   const combatStats = data.combatStats || {
     strength: -3,
     magicalPower: -3,
@@ -286,7 +289,6 @@ function CombatStatsStep({ data, setData, onNext }) {
     recovery: -3
   };
 
-  // Calculate point costs for going from -3 to target value
   const getStatCost = (targetValue) => {
     const costs = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13];
     let total = 0;
@@ -296,7 +298,6 @@ function CombatStatsStep({ data, setData, onNext }) {
     return total;
   };
 
-  // Calculate total points spent
   const pointsSpent = Object.values(combatStats).reduce((total, statValue) => {
     return total + getStatCost(statValue);
   }, 0);
@@ -316,7 +317,6 @@ function CombatStatsStep({ data, setData, onNext }) {
     }
   };
 
-  // Reset all stats to -3
   const resetStats = () => {
     const resetStats = {
       strength: -3,
@@ -330,7 +330,6 @@ function CombatStatsStep({ data, setData, onNext }) {
     setData(prev => ({ ...prev, combatStats: resetStats }));
   };
 
-  // Get stat effects for display
   const getStatEffects = (statName, value) => {
     switch (statName) {
       case 'strength':
@@ -353,7 +352,7 @@ function CombatStatsStep({ data, setData, onNext }) {
         return (
           <div>
             <div style={{ marginBottom: '8px' }}>
-              <strong>Combat:</strong> {turns} turn{turns > 1 ? 's' : ''} per round, {initiative >= 0 ? '+' : ''}${initiative} initiative
+              <strong>Combat:</strong> {turns} turn{turns > 1 ? 's' : ''} per round, {initiative >= 0 ? '+' : ''}{initiative} initiative
             </div>
             <div style={{ fontSize: '12px', color: '#666', lineHeight: '1.3' }}>
               <strong>Equipment Speed Penalties (turns only, not initiative):</strong><br/>
@@ -392,53 +391,29 @@ function CombatStatsStep({ data, setData, onNext }) {
         return `+${value * 20} bonus to healing rolls`;
       
       case 'recovery':
-  let startingAP, gainPerRound;
-  
-  if (value === -3) {
-    startingAP = 1;
-    gainPerRound = 0;
-  } else if (value === -2) {
-    startingAP = 2;
-    gainPerRound = 0.5;
-  } else if (value === -1) {
-    startingAP = 3;
-    gainPerRound = 0.5;
-  } else if (value === 0) {
-    startingAP = 4;
-    gainPerRound = 1;
-  } else if (value === 1) {
-    startingAP = 5;
-    gainPerRound = 1;
-  } else if (value === 2) {
-    startingAP = 6;
-    gainPerRound = 1.5;
-  } else if (value === 3) {
-    startingAP = 7;
-    gainPerRound = 1.5;
-  } else if (value === 4) {
-    startingAP = 8;
-    gainPerRound = 2;
-  } else if (value === 5) {
-    startingAP = 9;
-    gainPerRound = 2;
-  } else if (value === 6) {
-    startingAP = 10;
-    gainPerRound = 2.5;
-  } else if (value === 7) {
-    startingAP = 10;
-    gainPerRound = 2.5;
-  } else if (value === 8) {
-    startingAP = 10;
-    gainPerRound = 3;
-  } else if (value === 9) {
-    startingAP = 10;
-    gainPerRound = 3.5;
-  } else if (value === 10) {
-    startingAP = 10;
-    gainPerRound = 4;
-  }
-  
-  return `Start with ${startingAP} AP, gain ${gainPerRound} AP per round (10 AP cap)`;
+        let startingAP, gainPerRound;
+        
+        if (value === -3) { startingAP = 1; gainPerRound = 0; }
+        else if (value === -2) { startingAP = 2; gainPerRound = 0.5; }
+        else if (value === -1) { startingAP = 3; gainPerRound = 0.5; }
+        else if (value === 0) { startingAP = 4; gainPerRound = 1; }
+        else if (value === 1) { startingAP = 5; gainPerRound = 1; }
+        else if (value === 2) { startingAP = 6; gainPerRound = 1.5; }
+        else if (value === 3) { startingAP = 7; gainPerRound = 1.5; }
+        else if (value === 4) { startingAP = 8; gainPerRound = 2; }
+        else if (value === 5) { startingAP = 9; gainPerRound = 2; }
+        else if (value === 6) { startingAP = 10; gainPerRound = 2.5; }
+        else if (value === 7) { startingAP = 10; gainPerRound = 2.5; }
+        else if (value === 8) { startingAP = 10; gainPerRound = 3; }
+        else if (value === 9) { startingAP = 10; gainPerRound = 3.5; }
+        else if (value === 10) { startingAP = 10; gainPerRound = 4; }
+        
+        return `Start with ${startingAP} AP, gain ${gainPerRound} AP per round (10 AP cap)`;
+      
+      default:
+        return "";
+    }
+  };
 
   const statDescriptions = {
     strength: "Increases damage with STR-based weapons",
