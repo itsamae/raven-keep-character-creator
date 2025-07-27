@@ -1397,7 +1397,6 @@ function ReputationStep({ data, setData, onNext, onBack }) {
    </div>
  );
 } 
-// Step 4: Non-Combat Stats (THE BIG ONE!)
 function NonCombatStatsStep({ data, setData, onNext, onBack }) {
   // Initialize non-combat stats if they don't exist
   const domains = data.domains || {
@@ -1576,9 +1575,13 @@ function NonCombatStatsStep({ data, setData, onNext, onBack }) {
     return total + getStatCost(statValue);
   }, 0);
 
-  // Calculate total points spent on sub-domains
+  // Calculate total points spent on sub-domains - only count values above -3
   const subDomainPointsSpent = Object.values(subDomains).reduce((total, statValue) => {
-    return total + getStatCost(statValue || -3);
+    // Only count the cost if the value is above -3
+    if (statValue > -3) {
+      return total + getStatCost(statValue);
+    }
+    return total;
   }, 0);
 
   // Calculate available sub-domain points from domains
@@ -1605,35 +1608,23 @@ function NonCombatStatsStep({ data, setData, onNext, onBack }) {
     }
   };
 
-  const  = (subDomainName, newValue) => {
-  if (newValue < -3 || newValue > 10) return;
-
-  setData(prev => {
-    const currentValue = prev.subDomains?.[subDomainName] ?? -3;
-
-    // If nothing changed, skip
-    if (currentValue === newValue) return prev;
-
-    // New subdomains map
-    const newSubDomains = { ...prev.subDomains, [subDomainName]: newValue };
-
-    // 🔁 Fresh recalculation using live domain values
-    const freshAvailablePoints = Object.values(prev.domains).reduce((total, domainVal) => {
-      return domainVal > -3 ? total + (domainVal + 3) * 3 : total;
+  const updateSubDomain = (subDomainName, newValue) => {
+    if (newValue < -3 || newValue > 10) return;
+    
+    const newSubDomains = { ...subDomains, [subDomainName]: newValue };
+    
+    // Calculate new sub-domain points spent - only count values above -3
+    const newSubDomainPointsSpent = Object.values(newSubDomains).reduce((total, statValue) => {
+      if (statValue > -3) {
+        return total + getStatCost(statValue);
+      }
+      return total;
     }, 0);
-
-    const freshSpentPoints = Object.values(newSubDomains).reduce((total, val) => {
-      return total + getStatCost(typeof val === 'number' ? val : -3);
-    }, 0);
-
-    // ❌ Don't allow if it exceeds available
-    if (freshSpentPoints > freshAvailablePoints) return prev;
-
-    // ✅ Commit update
-    return { ...prev, subDomains: newSubDomains };
-  });
-};
-  
+    
+    if (newSubDomainPointsSpent <= availableSubDomainPoints) {
+      setData(prev => ({ ...prev, subDomains: newSubDomains }));
+    }
+  };
 
   const resetStats = () => {
     const resetDomains = {
@@ -1823,103 +1814,89 @@ function NonCombatStatsStep({ data, setData, onNext, onBack }) {
               </div>
             </div>
 
-            {/* Sub-Domains */}
-            {domainValue > -3 && (
-              <div style={{ padding: '15px' }}>
-                <h4 style={{ margin: '0 0 15px 0', color: '#555' }}>Sub-Domain Specializations</h4>
-                <div style={{ display: 'grid', gap: '10px' }}>
-                  {domain.subDomains.map(subDomainKey => {
-                    const subDomainValue = subDomains[subDomainKey] || -3;
-                    const subDomainModifier = getStatModifier(subDomainValue);
-                    const trainingStatus = getTrainingStatus(subDomainValue);
-                    
-                    return (
-                      <div key={subDomainKey} style={{ 
-                        padding: '10px', 
-                        border: '1px solid #eee', 
-                        borderRadius: '3px',
-                        backgroundColor: '#fafafa'
-                      }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <div style={{ flex: 1 }}>
-                            <div style={{ fontSize: '14px', fontWeight: 'bold' }}>
-                              {subDomainNames[subDomainKey]}
-                            </div>
-                            <div style={{ fontSize: '12px', color: '#666' }}>
-                              <strong>Modifier:</strong> {subDomainModifier >= 0 ? '+' : ''}{subDomainModifier} | 
-                              <strong> Status:</strong> <span style={{ color: trainingStatus === 'Trained' ? '#28a745' : '#dc3545' }}>
-                                {trainingStatus}
-                              </span>
-                            </div>
+            {/* Sub-Domains - Always visible */}
+            <div style={{ padding: '15px' }}>
+              <h4 style={{ margin: '0 0 15px 0', color: '#555' }}>Sub-Domain Specializations</h4>
+              <div style={{ display: 'grid', gap: '10px' }}>
+                {domain.subDomains.map(subDomainKey => {
+                  const subDomainValue = subDomains[subDomainKey] || -3;
+                  const subDomainModifier = getStatModifier(subDomainValue);
+                  const trainingStatus = getTrainingStatus(subDomainValue);
+                  const isDisabled = domainValue <= -3;
+                  
+                  return (
+                    <div key={subDomainKey} style={{ 
+                      padding: '10px', 
+                      border: '1px solid #eee', 
+                      borderRadius: '3px',
+                      backgroundColor: isDisabled ? '#f0f0f0' : '#fafafa',
+                      opacity: isDisabled ? 0.6 : 1
+                    }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div style={{ flex: 1 }}>
+                          <div style={{ fontSize: '14px', fontWeight: 'bold' }}>
+                            {subDomainNames[subDomainKey]}
                           </div>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                            {(() => {
-  const domainAllocated = domains[domainKey] > -3 ? (domains[domainKey] + 3) * 3 : 0;
-  const domainSubPointsUsed = domain.subDomains.reduce((sum, key) => {
-    const val = subDomains[key] ?? -3;
-    return sum + getStatCost(val);
-  }, 0);
-  const domainSubPointsRemaining = domainAllocated - domainSubPointsUsed;
-  const canIncrease = subDomainValue < 10 && domainSubPointsRemaining > 0;
-
-  return (
-    <button 
-      onClick={() => updateSubDomain(subDomainKey, subDomainValue + 1)}
-      disabled={!canIncrease}
-      style={{ 
-        padding: '3px 8px', 
-        fontSize: '14px',
-        backgroundColor: canIncrease ? '#28a745' : '#ccc',
-        color: 'white',
-        border: 'none',
-        borderRadius: '3px',
-        cursor: canIncrease ? 'pointer' : 'not-allowed'
-      }}
-    >
-      +
-    </button>
-  );
-})()}
-
-                            <span style={{ 
-                              minWidth: '30px', 
-                              textAlign: 'center', 
-                              fontSize: '14px', 
-                              fontWeight: 'bold',
-                              padding: '3px 6px',
-                              backgroundColor: '#fff',
-                              border: '1px solid #ddd',
-                              borderRadius: '3px'
-                            }}>
-                              {subDomainValue}
+                          <div style={{ fontSize: '12px', color: '#666' }}>
+                            <strong>Modifier:</strong> {subDomainModifier >= 0 ? '+' : ''}{subDomainModifier} | 
+                            <strong> Status:</strong> <span style={{ color: trainingStatus === 'Trained' ? '#28a745' : '#dc3545' }}>
+                              {trainingStatus}
                             </span>
-                            <button 
-                              onClick={() => updateSubDomain(subDomainKey, subDomainValue + 1)}
-                              disabled={subDomainValue >= 10 || subDomainPointsRemaining <= 0}
-                              style={{ 
-                                padding: '3px 8px', 
-                                fontSize: '14px',
-                                backgroundColor: (subDomainValue < 10 && subDomainPointsRemaining > 0) ? '#28a745' : '#ccc',
-                                color: 'white',
-                                border: 'none',
-                                borderRadius: '3px',
-                                cursor: (subDomainValue < 10 && subDomainPointsRemaining > 0) ? 'pointer' : 'not-allowed'
-                              }}
-                            >
+                          </div>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                          <button 
+                            onClick={() => updateSubDomain(subDomainKey, subDomainValue - 1)}
+                            disabled={subDomainValue <= -3 || isDisabled}
+                            style={{ 
+                              padding: '3px 8px', 
+                              fontSize: '14px',
+                              backgroundColor: (subDomainValue > -3 && !isDisabled) ? '#dc3545' : '#ccc',
+                              color: 'white',
+                              border: 'none',
+                              borderRadius: '3px',
+                              cursor: (subDomainValue > -3 && !isDisabled) ? 'pointer' : 'not-allowed'
+                            }}
+                          >
+                            -
+                          </button>
+                          <span style={{ 
+                            minWidth: '30px', 
+                            textAlign: 'center', 
+                            fontSize: '14px', 
+                            fontWeight: 'bold',
+                            padding: '3px 6px',
+                            backgroundColor: '#fff',
+                            border: '1px solid #ddd',
+                            borderRadius: '3px'
+                          }}>
+                            {subDomainValue}
+                          </span>
+                          <button 
+                            onClick={() => updateSubDomain(subDomainKey, subDomainValue + 1)}
+                            disabled={subDomainValue >= 10 || subDomainPointsRemaining <= 0 || isDisabled}
+                            style={{ 
+                              padding: '3px 8px', 
+                              fontSize: '14px',
+                              backgroundColor: (subDomainValue < 10 && subDomainPointsRemaining > 0 && !isDisabled) ? '#28a745' : '#ccc',
+                              color: 'white',
+                              border: 'none',
+                              borderRadius: '3px',
+                              cursor: (subDomainValue < 10 && subDomainPointsRemaining > 0 && !isDisabled) ? 'pointer' : 'not-allowed'
+                            }}
+                          >
                             +
                           </button>
-
-                          </div>
-                        </div>
-                        <div style={{ fontSize: '11px', color: '#888', marginTop: '3px' }}>
-                          Cost: {getStatCost(subDomainValue)} sub-points
                         </div>
                       </div>
-                    );
-                  })}
-                </div>
+                      <div style={{ fontSize: '11px', color: '#888', marginTop: '3px' }}>
+                        Cost: {subDomainValue > -3 ? getStatCost(subDomainValue) : 0} sub-points
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
-            )}
+            </div>
           </div>
         );
       })}
