@@ -2584,4 +2584,593 @@ function BackgroundsStep({ data, setData, onNext, onBack }) {
   );
 }
 
+// Step 6: Lifestyles
+function LifestylesStep({ data, setData, onNext, onBack }) {
+  const lifestyles = data.lifestyles || {};
+  const lifestylePoints = data.lifestylePoints || 5;
+
+  // Calculate total points spent
+  const pointsSpent = Object.values(lifestyles).reduce((total, level) => total + level, 0);
+  const pointsRemaining = lifestylePoints - pointsSpent;
+
+  const lifestyleDefinitions = {
+    'Crafting Lifestyles': {
+      'Combat Gear': [
+        {
+          id: 'weaponsmithing',
+          name: 'Weaponsmithing',
+          requirements: 'Blacksmithing 3+',
+          products: 'Swords, spears, axes, combat implements',
+          materials: 'Metal ores, leather wrappings, gems',
+          tierExamples: 'Basic Iron Sword → Reinforced Steel Blade → Enchanted Mithril Weapon → Legendary Named Weapon'
+        },
+        {
+          id: 'armoring',
+          name: 'Armoring',
+          requirements: 'Blacksmithing 3+ or Leatherworking 3+',
+          products: 'Heavy armor, shields, protective gear',
+          materials: 'Metal ores, leather, cloth padding',
+          tierExamples: 'Leather Vest → Chain Mail → Plate Armor → Dragonscale Mail'
+        }
+      ],
+      'Consumables': [
+        {
+          id: 'alchemy',
+          name: 'Alchemy',
+          requirements: 'Alchemy (Int) 3+',
+          products: 'Potions, elixirs, bombs, transmutations',
+          materials: 'Herbs, minerals, crystals, rare reagents',
+          tierExamples: 'Healing Potion → Greater Healing → Elixir of Life → Philosopher\'s Stone'
+        },
+        {
+          id: 'brewing',
+          name: 'Brewing',
+          requirements: 'Brewing 3+',
+          products: 'Ales, wines, spirits, magical drinks',
+          materials: 'Grains, fruits, herbs, yeast',
+          tierExamples: 'Simple Ale → Fine Wine → Fortifying Mead → Ambrosia'
+        }
+      ],
+      'Magitek Engineering': [
+        {
+          id: 'magitek_engineering',
+          name: 'Magitek Engineering',
+          requirements: 'Magitek (Int) 3+ AND Engineering 3+',
+          products: 'Devices, gadgets, mechanical items',
+          materials: 'Metal components, crystals, ceruleum',
+          tierExamples: 'Add later'
+        }
+      ],
+      'Fashion & Accessories': [
+        {
+          id: 'weaving',
+          name: 'Weaving',
+          requirements: 'Weaving (Deft) 3+',
+          products: 'Cloth armor, robes, fashion items',
+          materials: 'Fibers, threads, dyes, magical threads',
+          tierExamples: 'Hempen Robe → Silk Dress → Enchanted Cloak → Astral Silk Ensemble'
+        },
+        {
+          id: 'leatherworking',
+          name: 'Leatherworking',
+          requirements: 'Leatherworking (Deft) 3+',
+          products: 'Medium armor, bags, belts, boots',
+          materials: 'Hides, scales, sinew, dyes',
+          tierExamples: 'Hide Boots → Reinforced Jerkin → Drake Leather → Behemoth King Set'
+        },
+        {
+          id: 'goldsmithing',
+          name: 'Goldsmithing',
+          requirements: 'Goldsmithing (Deft) 3+',
+          products: 'Jewelry, magical focuses, gems, accessories',
+          materials: 'Precious metals, gems, crystals',
+          tierExamples: 'Copper Ring → Gold Necklace → Enchanted Circlet → Crown of the Elements'
+        },
+        {
+          id: 'gem_crafting',
+          name: 'Gem Crafting',
+          requirements: 'Gem Crafting (Deft) 3+',
+          products: 'Weapon Skill Gems, Spell Gems',
+          materials: 'Gems',
+          tierExamples: 'Write later'
+        },
+        {
+          id: 'carpentry',
+          name: 'Carpentry',
+          requirements: 'Carpentry (Deft) 3+',
+          products: 'Wands, Staves, Furniture, etc',
+          materials: 'Lumber, metal fittings, varnish',
+          tierExamples: 'Add later'
+        }
+      ]
+    },
+    'Gathering Lifestyles': {
+      'Resource Gathering': [
+        {
+          id: 'mining',
+          name: 'Mining',
+          requirements: 'Mining (Instinct) 3+',
+          monthlyYield: '10/20/30/40/50 ore + 2/4/6/8/10 gems',
+          products: 'Iron, silver, gold, mythril, adamantite, crystals',
+          special: 'Higher tiers access rare veins and crystal deposits'
+        },
+        {
+          id: 'botany',
+          name: 'Botany',
+          requirements: 'Botany (Instinct) 3+',
+          monthlyYield: '15/30/45/60/75 plants + 5/10/15/20/25 rare herbs',
+          products: 'Herbs, wood, fibers, seeds, rare flowers',
+          special: 'Seasonal variations affect yields'
+        },
+        {
+          id: 'fishing',
+          name: 'Fishing',
+          requirements: 'Fishing (Instinct) 3+',
+          monthlyYield: '20/40/60/80/100 fish + 1/2/3/4/5 rare catches',
+          products: 'Food fish, crafting materials, pearls, exotic species',
+          special: 'Location affects available catches'
+        },
+        {
+          id: 'farming',
+          name: 'Farming',
+          requirements: 'Nature Lore 3+ AND Botany 2+',
+          monthlyYield: '25/50/75/100/125 crops + 5/10/15/20/25 specialty produce',
+          products: 'Grains, vegetables, fruits, fibers, feed',
+          special: 'Add later'
+        }
+      ]
+    },
+    'Production Lifestyles': {
+      'Food & Animals': [
+        {
+          id: 'cooking',
+          name: 'Cooking',
+          requirements: 'Cooking 3+',
+          products: 'Meals, rations, buff foods, delicacies',
+          materials: 'Raw ingredients from farming/fishing/hunting'
+        },
+        {
+          id: 'ranching',
+          name: 'Ranching',
+          requirements: 'Husbandry 3+',
+          monthlyYield: '10/20/30/40/50 animal products (milk, eggs, wool)',
+          products: 'Livestock for food, breeding stock',
+          special: 'Animals require feed from farmers'
+        },
+        {
+          id: 'beast_training',
+          name: 'Beast Training',
+          requirements: 'Animal Handling 3+ AND Husbandry 3+',
+          products: 'Trained mounts, combat pets, working animals',
+          trainingTime: '3/2/2/1/1 months per creature',
+          tierExamples: 'Chocobo → War Bird → Drake → Griffon'
+        }
+      ]
+    },
+    'Service Lifestyles': {
+      'Professional Services': [
+        {
+          id: 'merchantry',
+          name: 'Merchantry',
+          requirements: 'Commerce 3+ OR Economics 3+',
+          products: 'Market stall, trade routes, bulk deals',
+          monthlyIncome: '+50/150/300/500/750 gil from trading'
+        },
+        {
+          id: 'scholarship',
+          name: 'Scholarship',
+          requirements: 'Any three Intelligence sub-domains at 3+',
+          products: 'Research papers, teaching, discoveries',
+          monthlyIncome: '+25/75/150/250/375 gil from institutions',
+          special: 'Grants access to special research assistance during leves'
+        },
+        {
+          id: 'entertainment',
+          name: 'Entertainment',
+          requirements: 'Performance 3+ OR Gambling 3+',
+          products: 'Shows, events, gambling operations',
+          monthlyIncome: '+40/120/240/400/600 gil from venues',
+          special: 'Recognized as a star or someone famous at higher levels'
+        },
+        {
+          id: 'transportation',
+          name: 'Transportation',
+          requirements: 'Riding 3+ OR Navigation 3+',
+          products: 'Courier services, caravan guarding, fast travel',
+          monthlyIncome: '+35/105/210/350/525 gil from contracts',
+          special: 'Add later'
+        }
+      ]
+    },
+    'Shadow Lifestyles (Illicit Activities)': {
+      'Criminal Activities': [
+        {
+          id: 'larceny',
+          name: 'Larceny',
+          requirements: 'Legerdemain 3+ AND Stealth 3+',
+          monthlyIncome: '+30/90/180/300/450 gil from "acquisitions"',
+          special: 'Pickpocketing NPCs, burglary jobs, heist planning. Grants access to Special Heists.',
+          risk: 'Failed checks may result in bounties or jail time'
+        },
+        {
+          id: 'black_market_dealer',
+          name: 'Black Market Dealer',
+          requirements: 'Streetwise 3+ AND Commerce 2+',
+          monthlyIncome: '+40/120/240/400/600 gil from fence operations',
+          special: 'Can fence stolen goods at 40/50/60/70/80% value\nAccess: Illegal items, contraband, restricted materials',
+          risk: 'Raids may confiscate inventory'
+        },
+        {
+          id: 'information_broker',
+          name: 'Information Broker',
+          requirements: 'Investigation 3+ AND Streetwise 3+',
+          monthlyIncome: '+25/75/150/250/375 gil from selling secrets',
+          special: 'Dabbler: Hear local rumors first\nApprentice: Get 24-hour warning of minor events\nJourneyman: Learn of plot hooks 48 hours early\nExpert: Discover major event details 72 hours in advance\nGrandmaster: Know secrets that shape the world\n\nDM Whispers: Receive private information based on tier'
+        },
+        {
+          id: 'smuggling',
+          name: 'Smuggling',
+          requirements: 'Navigation 3+ AND Deception 3+',
+          monthlyIncome: '+35/105/210/350/525 gil from contraband runs',
+          special: 'Can transport illegal goods between cities\nBonus: Avoid customs fees on legal goods too',
+          risk: 'Caught smuggling = major fines and reputation loss'
+        },
+        {
+          id: 'forgery',
+          name: 'Forgery',
+          requirements: 'Forgery 4+ AND Calligraphy 2+',
+          products: 'Fake documents, permits, identities',
+          monthlyIncome: '+20/60/120/200/300 gil from document sales',
+          special: 'Can create temporary legal documents',
+          risk: 'Forgeries may be detected over time'
+        }
+      ]
+    }
+  };
+
+  const tierNames = ['Dabbler', 'Apprentice', 'Journeyman', 'Expert', 'Grandmaster'];
+  const tierCosts = [1, 3, 6, 10, 15]; // Cumulative costs
+  const tierBonuses = ['+50', '+150', '+250', '+400', '+500'];
+  const tierCostReductions = ['0%', '10%', '20%', '30%', '40%'];
+
+  const updateLifestyle = (lifestyleId, newLevel) => {
+    if (newLevel < 0 || newLevel > 5) return;
+    
+    // Calculate current cost for this lifestyle
+    const currentLevel = lifestyles[lifestyleId] || 0;
+    const currentCost = currentLevel > 0 ? tierCosts[currentLevel - 1] : 0;
+    
+    // Calculate new cost
+    const newCost = newLevel > 0 ? tierCosts[newLevel - 1] : 0;
+    
+    // Calculate total points if we make this change
+    const otherLifestyleCosts = Object.entries(lifestyles).reduce((total, [id, level]) => {
+      if (id === lifestyleId) return total; // Skip the one we're changing
+      return total + (level > 0 ? tierCosts[level - 1] : 0);
+    }, 0);
+    
+    const newTotalCost = otherLifestyleCosts + newCost;
+    
+    if (newTotalCost <= lifestylePoints) {
+      const newLifestyles = { ...lifestyles };
+      if (newLevel === 0) {
+        delete newLifestyles[lifestyleId];
+      } else {
+        newLifestyles[lifestyleId] = newLevel;
+      }
+      setData(prev => ({ ...prev, lifestyles: newLifestyles }));
+    }
+  };
+
+  const resetLifestyles = () => {
+    setData(prev => ({ ...prev, lifestyles: {} }));
+  };
+
+  const getTierDescription = (tier) => {
+    if (tier === 0) return 'Not invested';
+    return `${tierNames[tier - 1]} (${tierCosts[tier - 1]} points)`;
+  };
+
+  return (
+    <div>
+      <h2>Lifestyles</h2>
+      
+      {/* Explanation */}
+      <div style={{ marginBottom: '30px', padding: '20px', backgroundColor: '#f8f9fa', border: '1px solid #ddd', borderRadius: '5px' }}>
+        <h3 style={{ margin: '0 0 15px 0' }}>What Are Lifestyles?</h3>
+        <p style={{ marginBottom: '15px' }}>
+          Lifestyles represent your character's profession, hobbies, and economic activities outside of adventuring. 
+          They determine what goods and services you can create, gather, or provide to the player-driven economy. 
+          Unlike combat or non-combat skills which represent your raw ability, Lifestyles represent your access to tools, recipes, techniques, and infrastructure.
+        </p>
+        <p style={{ marginBottom: '15px' }}>
+          Think of it this way: Having Alchemy 10 means you're a genius at understanding chemical reactions, but without investing in the Alchemy Lifestyle, 
+          you're working with crude tools and don't know any actual recipes. Lifestyles bridge the gap between knowledge and practical application.
+        </p>
+        
+        <h4 style={{ margin: '15px 0 10px 0' }}>Lifestyle Points & Progression</h4>
+        <div style={{ marginBottom: '15px' }}>
+          <strong>Starting Allocation:</strong> Level 1: 5 lifestyle points<br />
+          <strong>Progression:</strong> +1 point every 2 levels (2, 4, 6, 8, etc.)<br />
+          <strong>Total at Level 30:</strong> 20 lifestyle points
+        </div>
+        
+        <h4 style={{ margin: '15px 0 10px 0' }}>Investment Tiers</h4>
+        <p style={{ marginBottom: '10px' }}>Each tier unlocks new capabilities and provides bonuses to relevant crafting/gathering checks:</p>
+        <div style={{ display: 'grid', gap: '5px', fontSize: '14px' }}>
+          <div><strong>Dabbler (1 point):</strong> Access basic recipes/techniques, +50 bonus</div>
+          <div><strong>Apprentice (3 points):</strong> Tier 2 recipes, +150 bonus, 10% cost reduction</div>
+          <div><strong>Journeyman (6 points):</strong> Tier 3 recipes, +250 bonus, 20% cost reduction</div>
+          <div><strong>Expert (10 points):</strong> Master recipes, +400 bonus, 30% cost reduction</div>
+          <div><strong>Grandmaster (15 points):</strong> Legendary items, +500 bonus, 40% cost reduction, create new recipes</div>
+        </div>
+      </div>
+
+      {/* Points Summary */}
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center',
+        marginBottom: '20px', 
+        padding: '15px', 
+        backgroundColor: '#f8f9fa', 
+        border: '1px solid #ddd', 
+        borderRadius: '5px' 
+      }}>
+        <div>
+          <strong>Lifestyle Points:</strong> {pointsSpent} / {lifestylePoints} 
+          <span style={{ color: '#666', marginLeft: '10px' }}>({pointsRemaining} remaining)</span>
+        </div>
+        <button 
+          onClick={resetLifestyles}
+          style={{ 
+            padding: '8px 16px', 
+            fontSize: '14px',
+            backgroundColor: '#6c757d',
+            color: 'white',
+            border: 'none',
+            borderRadius: '5px',
+            cursor: 'pointer'
+          }}
+        >
+          Reset All Lifestyles
+        </button>
+      </div>
+
+      {/* Lifestyle Categories */}
+      {Object.entries(lifestyleDefinitions).map(([categoryName, subcategories]) => (
+        <div key={categoryName} style={{ marginBottom: '30px' }}>
+          <h3 style={{ 
+            margin: '0 0 20px 0', 
+            padding: '10px', 
+            backgroundColor: categoryName.includes('Shadow') ? '#dc3545' : '#007bff', 
+            color: 'white', 
+            borderRadius: '5px' 
+          }}>
+            {categoryName}
+          </h3>
+          
+          {Object.entries(subcategories).map(([subcategoryName, lifestyleList]) => (
+            <div key={subcategoryName} style={{ marginBottom: '25px' }}>
+              <h4 style={{ margin: '0 0 15px 0', color: '#333' }}>{subcategoryName}</h4>
+              
+              <div style={{ display: 'grid', gap: '20px' }}>
+                {lifestyleList.map(lifestyle => {
+                  const currentLevel = lifestyles[lifestyle.id] || 0;
+                  
+                  return (
+                    <div key={lifestyle.id} style={{ 
+                      padding: '20px', 
+                      border: currentLevel > 0 ? '2px solid #007bff' : '1px solid #ddd', 
+                      borderRadius: '5px',
+                      backgroundColor: currentLevel > 0 ? '#f0f8ff' : 'white'
+                    }}>
+                      {/* Header with name and level controls */}
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '15px' }}>
+                        <div style={{ flex: 1 }}>
+                          <h5 style={{ margin: '0 0 5px 0', fontSize: '18px', color: '#333' }}>
+                            {lifestyle.name}
+                          </h5>
+                          <div style={{ fontSize: '14px', color: '#666', marginBottom: '10px' }}>
+                            <strong>Requirements:</strong> {lifestyle.requirements}
+                          </div>
+                          <div style={{ fontSize: '14px', color: '#007bff', fontWeight: 'bold' }}>
+                            Current Level: {getTierDescription(currentLevel)}
+                          </div>
+                        </div>
+                        
+                        {/* Level Controls */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginLeft: '20px' }}>
+                          <button 
+                            onClick={() => updateLifestyle(lifestyle.id, currentLevel - 1)}
+                            disabled={currentLevel <= 0}
+                            style={{ 
+                              padding: '5px 10px', 
+                              fontSize: '14px',
+                              backgroundColor: currentLevel > 0 ? '#dc3545' : '#ccc',
+                              color: 'white',
+                              border: 'none',
+                              borderRadius: '3px',
+                              cursor: currentLevel > 0 ? 'pointer' : 'not-allowed'
+                            }}
+                          >
+                            -
+                          </button>
+                          <span style={{ 
+                            minWidth: '60px', 
+                            textAlign: 'center', 
+                            fontSize: '16px', 
+                            fontWeight: 'bold',
+                            padding: '5px 10px',
+                            backgroundColor: '#fff',
+                            border: '1px solid #ddd',
+                            borderRadius: '3px'
+                          }}>
+                            {currentLevel}/5
+                          </span>
+                          <button 
+                            onClick={() => updateLifestyle(lifestyle.id, currentLevel + 1)}
+                            disabled={currentLevel >= 5 || pointsRemaining <= 0}
+                            style={{ 
+                              padding: '5px 10px', 
+                              fontSize: '14px',
+                              backgroundColor: (currentLevel < 5 && pointsRemaining > 0) ? '#28a745' : '#ccc',
+                              color: 'white',
+                              border: 'none',
+                              borderRadius: '3px',
+                              cursor: (currentLevel < 5 && pointsRemaining > 0) ? 'pointer' : 'not-allowed'
+                            }}
+                          >
+                            +
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Lifestyle Details */}
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', fontSize: '14px' }}>
+                        <div>
+                          {lifestyle.products && (
+                            <div style={{ marginBottom: '10px' }}>
+                              <strong>Products:</strong> {lifestyle.products}
+                            </div>
+                          )}
+                          {lifestyle.materials && (
+                            <div style={{ marginBottom: '10px' }}>
+                              <strong>Materials Needed:</strong> {lifestyle.materials}
+                            </div>
+                          )}
+                          {lifestyle.monthlyYield && (
+                            <div style={{ marginBottom: '10px' }}>
+                              <strong>Monthly Yield:</strong> {lifestyle.monthlyYield}
+                            </div>
+                          )}
+                          {lifestyle.monthlyIncome && (
+                            <div style={{ marginBottom: '10px' }}>
+                              <strong>Monthly Income:</strong> {lifestyle.monthlyIncome}
+                            </div>
+                          )}
+                        </div>
+                        
+                        <div>
+                          {lifestyle.tierExamples && (
+                            <div style={{ marginBottom: '10px' }}>
+                              <strong>Tier Examples:</strong> {lifestyle.tierExamples}
+                            </div>
+                          )}
+                          {lifestyle.trainingTime && (
+                            <div style={{ marginBottom: '10px' }}>
+                              <strong>Training Time:</strong> {lifestyle.trainingTime}
+                            </div>
+                          )}
+                          {lifestyle.special && (
+                            <div style={{ marginBottom: '10px' }}>
+                              <strong>Special:</strong> <span style={{ whiteSpace: 'pre-line' }}>{lifestyle.special}</span>
+                            </div>
+                          )}
+                          {lifestyle.risk && (
+                            <div style={{ marginBottom: '10px', color: '#dc3545' }}>
+                              <strong>Risk:</strong> {lifestyle.risk}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Show next tier preview if not at max */}
+                      {currentLevel < 5 && (
+                        <div style={{ 
+                          marginTop: '15px', 
+                          padding: '10px', 
+                          backgroundColor: '#f8f9fa', 
+                          borderRadius: '3px',
+                          border: '1px solid #e9ecef'
+                        }}>
+                          <div style={{ fontSize: '12px', color: '#666' }}>
+                            <strong>Next Tier ({tierNames[currentLevel] || 'Dabbler'}):</strong> {tierBonuses[currentLevel]} bonus, {tierCostReductions[currentLevel]} cost reduction
+                            {currentLevel === 0 ? ' + Access to basic recipes/techniques' : ''}
+                            {currentLevel === 1 ? ' + Tier 2 recipes' : ''}
+                            {currentLevel === 2 ? ' + Tier 3 recipes' : ''}
+                            {currentLevel === 3 ? ' + Master recipes' : ''}
+                            {currentLevel === 4 ? ' + Legendary items, create new recipes' : ''}
+                          </div>
+                          <div style={{ fontSize: '12px', color: '#666', marginTop: '5px' }}>
+                            Cost: {tierCosts[currentLevel]} points total
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+        </div>
+      ))}
+
+      {/* Selected Lifestyles Summary */}
+      {Object.keys(lifestyles).length > 0 && (
+        <div style={{ 
+          marginBottom: '20px', 
+          padding: '15px', 
+          backgroundColor: '#e9ecef', 
+          borderRadius: '5px' 
+        }}>
+          <h4 style={{ margin: '0 0 10px 0' }}>Selected Lifestyles:</h4>
+          <div style={{ display: 'grid', gap: '5px' }}>
+            {Object.entries(lifestyles).map(([id, level]) => {
+              const lifestyle = Object.values(lifestyleDefinitions)
+                .flatMap(category => Object.values(category))
+                .flat()
+                .find(ls => ls.id === id);
+              
+              return (
+                <div key={id} style={{ fontSize: '14px' }}>
+                  • {lifestyle?.name || id}: {tierNames[level - 1]} ({tierCosts[level - 1]} points)
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      <div style={{ display: 'flex', gap: '10px' }}>
+        <button 
+          onClick={onBack}
+          style={{ 
+            padding: '12px 24px', 
+            fontSize: '16px',
+            backgroundColor: '#6c757d',
+            color: 'white',
+            border: 'none',
+            borderRadius: '5px',
+            cursor: 'pointer'
+          }}
+        >
+          ← Back to Backgrounds
+        </button>
+        
+        <button 
+          onClick={onNext}
+          style={{ 
+            padding: '12px 24px', 
+            fontSize: '16px',
+            backgroundColor: '#007bff',
+            color: 'white',
+            border: 'none',
+            borderRadius: '5px',
+            cursor: 'pointer'
+          }}
+        >
+          Continue to Combat Stats
+        </button>
+        
+        {pointsRemaining > 0 && (
+          <p style={{ color: '#28a745', marginTop: '10px', marginLeft: '10px' }}>
+            💡 You have {pointsRemaining} lifestyle points remaining.
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default App;
