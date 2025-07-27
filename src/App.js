@@ -1561,7 +1561,6 @@ function NonCombatStatsStep({ data, setData, onNext, onBack }) {
     acting: 'Acting - Conveying genuine emotion and narrative through performance, embodying characters authentically, and passing yourself off genuinely as another person'
   };
 
-  const subDomains = data.subDomains || {};
 
   const domainDefinitions = { /*... same as before ...*/ };
   const subDomainNames = { /*... same as before ...*/ };
