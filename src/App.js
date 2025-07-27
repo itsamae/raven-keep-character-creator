@@ -637,6 +637,13 @@ function ReputationStep({ data, setData, onNext, onBack }) {
         originPenalty: ['Garlemald & Imperial Territories', 'Gelmorra (pre-Gridanian subterranean)']
       },
       {
+        name: 'Whispering Pines',
+        description: 'Whispering Pines is a secretive assassins’ guild that operates like a family. Raised from childhood, members serve siblings and “Mother” or “Father.”',
+        raceBonus: [],
+        originBonus: ['Gridania & The Black Shroud'],
+        originPenalty: ['Garlemald & Imperial Territories']
+      },
+      {
         name: 'Sylph Tribe',
         description: 'Forest-dwelling beastmen allied with Gridania.',
         raceBonus: [],
