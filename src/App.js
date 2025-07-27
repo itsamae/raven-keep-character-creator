@@ -2589,7 +2589,7 @@ function LifestylesStep({ data, setData, onNext, onBack }) {
   const lifestyles = data.lifestyles || {};
   const lifestylePoints = data.lifestylePoints || 5;
 
-  // Calculate total points spent
+  // Calculate total points spent (1 point per tier)
   const pointsSpent = Object.values(lifestyles).reduce((total, level) => total + level, 0);
   const pointsRemaining = lifestylePoints - pointsSpent;
 
@@ -2829,37 +2829,29 @@ function LifestylesStep({ data, setData, onNext, onBack }) {
   };
 
   const tierNames = ['Dabbler', 'Apprentice', 'Journeyman', 'Expert', 'Grandmaster'];
-  const tierCosts = [1, 3, 6, 10, 15]; // Cumulative costs
   const tierBonuses = ['+50', '+150', '+250', '+400', '+500'];
   const tierCostReductions = ['0%', '10%', '20%', '30%', '40%'];
 
   const updateLifestyle = (lifestyleId, newLevel) => {
     if (newLevel < 0 || newLevel > 5) return;
     
-    // Calculate current cost for this lifestyle
     const currentLevel = lifestyles[lifestyleId] || 0;
-    const currentCost = currentLevel > 0 ? tierCosts[currentLevel - 1] : 0;
+    const pointChange = newLevel - currentLevel;
+    const newTotalSpent = pointsSpent + pointChange;
     
-    // Calculate new cost
-    const newCost = newLevel > 0 ? tierCosts[newLevel - 1] : 0;
+    // Check if we have enough points
+    if (newTotalSpent > lifestylePoints) return;
     
-    // Calculate total points if we make this change
-    const otherLifestyleCosts = Object.entries(lifestyles).reduce((total, [id, level]) => {
-      if (id === lifestyleId) return total; // Skip the one we're changing
-      return total + (level > 0 ? tierCosts[level - 1] : 0);
-    }, 0);
+    // Check level 1 restriction: no lifestyle above tier 3
+    if (newLevel > 3) return; // Level 1 restriction
     
-    const newTotalCost = otherLifestyleCosts + newCost;
-    
-    if (newTotalCost <= lifestylePoints) {
-      const newLifestyles = { ...lifestyles };
-      if (newLevel === 0) {
-        delete newLifestyles[lifestyleId];
-      } else {
-        newLifestyles[lifestyleId] = newLevel;
-      }
-      setData(prev => ({ ...prev, lifestyles: newLifestyles }));
+    const newLifestyles = { ...lifestyles };
+    if (newLevel === 0) {
+      delete newLifestyles[lifestyleId];
+    } else {
+      newLifestyles[lifestyleId] = newLevel;
     }
+    setData(prev => ({ ...prev, lifestyles: newLifestyles }));
   };
 
   const resetLifestyles = () => {
@@ -2868,7 +2860,7 @@ function LifestylesStep({ data, setData, onNext, onBack }) {
 
   const getTierDescription = (tier) => {
     if (tier === 0) return 'Not invested';
-    return `${tierNames[tier - 1]} (${tierCosts[tier - 1]} points)`;
+    return `${tierNames[tier - 1]} (${tier} point${tier > 1 ? 's' : ''})`;
   };
 
   return (
@@ -2892,17 +2884,18 @@ function LifestylesStep({ data, setData, onNext, onBack }) {
         <div style={{ marginBottom: '15px' }}>
           <strong>Starting Allocation:</strong> Level 1: 5 lifestyle points<br />
           <strong>Progression:</strong> +1 point every 2 levels (2, 4, 6, 8, etc.)<br />
-          <strong>Total at Level 30:</strong> 20 lifestyle points
+          <strong>Total at Level 30:</strong> 13 lifestyle points<br />
+          <strong>Level 1 Restriction:</strong> No single lifestyle above tier 3
         </div>
         
         <h4 style={{ margin: '15px 0 10px 0' }}>Investment Tiers</h4>
-        <p style={{ marginBottom: '10px' }}>Each tier unlocks new capabilities and provides bonuses to relevant crafting/gathering checks:</p>
+        <p style={{ marginBottom: '10px' }}>Each tier costs 1 point and unlocks new capabilities:</p>
         <div style={{ display: 'grid', gap: '5px', fontSize: '14px' }}>
           <div><strong>Dabbler (1 point):</strong> Access basic recipes/techniques, +50 bonus</div>
-          <div><strong>Apprentice (3 points):</strong> Tier 2 recipes, +150 bonus, 10% cost reduction</div>
-          <div><strong>Journeyman (6 points):</strong> Tier 3 recipes, +250 bonus, 20% cost reduction</div>
-          <div><strong>Expert (10 points):</strong> Master recipes, +400 bonus, 30% cost reduction</div>
-          <div><strong>Grandmaster (15 points):</strong> Legendary items, +500 bonus, 40% cost reduction, create new recipes</div>
+          <div><strong>Apprentice (2 points):</strong> Tier 2 recipes, +150 bonus, 10% cost reduction</div>
+          <div><strong>Journeyman (3 points):</strong> Tier 3 recipes, +250 bonus, 20% cost reduction</div>
+          <div><strong>Expert (4 points):</strong> Master recipes, +400 bonus, 30% cost reduction</div>
+          <div><strong>Grandmaster (5 points):</strong> Legendary items, +500 bonus, 40% cost reduction, create new recipes</div>
         </div>
       </div>
 
@@ -2920,6 +2913,10 @@ function LifestylesStep({ data, setData, onNext, onBack }) {
         <div>
           <strong>Lifestyle Points:</strong> {pointsSpent} / {lifestylePoints} 
           <span style={{ color: '#666', marginLeft: '10px' }}>({pointsRemaining} remaining)</span>
+          <br />
+          <span style={{ fontSize: '12px', color: '#dc3545' }}>
+            Level 1 Restriction: Maximum tier 3 per lifestyle
+          </span>
         </div>
         <button 
           onClick={resetLifestyles}
@@ -2957,6 +2954,7 @@ function LifestylesStep({ data, setData, onNext, onBack }) {
               <div style={{ display: 'grid', gap: '20px' }}>
                 {lifestyleList.map(lifestyle => {
                   const currentLevel = lifestyles[lifestyle.id] || 0;
+                  const maxLevel = 3; // Level 1 restriction
                   
                   return (
                     <div key={lifestyle.id} style={{ 
@@ -3006,19 +3004,19 @@ function LifestylesStep({ data, setData, onNext, onBack }) {
                             border: '1px solid #ddd',
                             borderRadius: '3px'
                           }}>
-                            {currentLevel}/5
+                            {currentLevel}/{maxLevel}
                           </span>
                           <button 
                             onClick={() => updateLifestyle(lifestyle.id, currentLevel + 1)}
-                            disabled={currentLevel >= 5 || pointsRemaining <= 0}
+                            disabled={currentLevel >= maxLevel || pointsRemaining <= 0}
                             style={{ 
                               padding: '5px 10px', 
                               fontSize: '14px',
-                              backgroundColor: (currentLevel < 5 && pointsRemaining > 0) ? '#28a745' : '#ccc',
+                              backgroundColor: (currentLevel < maxLevel && pointsRemaining > 0) ? '#28a745' : '#ccc',
                               color: 'white',
                               border: 'none',
                               borderRadius: '3px',
-                              cursor: (currentLevel < 5 && pointsRemaining > 0) ? 'pointer' : 'not-allowed'
+                              cursor: (currentLevel < maxLevel && pointsRemaining > 0) ? 'pointer' : 'not-allowed'
                             }}
                           >
                             +
@@ -3076,7 +3074,7 @@ function LifestylesStep({ data, setData, onNext, onBack }) {
                       </div>
 
                       {/* Show next tier preview if not at max */}
-                      {currentLevel < 5 && (
+                      {currentLevel < maxLevel && (
                         <div style={{ 
                           marginTop: '15px', 
                           padding: '10px', 
@@ -3089,11 +3087,24 @@ function LifestylesStep({ data, setData, onNext, onBack }) {
                             {currentLevel === 0 ? ' + Access to basic recipes/techniques' : ''}
                             {currentLevel === 1 ? ' + Tier 2 recipes' : ''}
                             {currentLevel === 2 ? ' + Tier 3 recipes' : ''}
-                            {currentLevel === 3 ? ' + Master recipes' : ''}
-                            {currentLevel === 4 ? ' + Legendary items, create new recipes' : ''}
                           </div>
                           <div style={{ fontSize: '12px', color: '#666', marginTop: '5px' }}>
-                            Cost: {tierCosts[currentLevel]} points total
+                            Cost: 1 point
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Level restriction notice */}
+                      {currentLevel >= maxLevel && (
+                        <div style={{ 
+                          marginTop: '15px', 
+                          padding: '10px', 
+                          backgroundColor: '#fff3cd', 
+                          borderRadius: '3px',
+                          border: '1px solid #ffeaa7'
+                        }}>
+                          <div style={{ fontSize: '12px', color: '#856404' }}>
+                            <strong>Level 1 Character:</strong> Maximum tier {maxLevel} reached. Higher tiers unlock at higher character levels.
                           </div>
                         </div>
                       )}
@@ -3124,7 +3135,7 @@ function LifestylesStep({ data, setData, onNext, onBack }) {
               
               return (
                 <div key={id} style={{ fontSize: '14px' }}>
-                  • {lifestyle?.name || id}: {tierNames[level - 1]} ({tierCosts[level - 1]} points)
+                  • {lifestyle?.name || id}: {tierNames[level - 1]} ({level} point{level > 1 ? 's' : ''})
                 </div>
               );
             })}
@@ -3165,7 +3176,7 @@ function LifestylesStep({ data, setData, onNext, onBack }) {
         
         {pointsRemaining > 0 && (
           <p style={{ color: '#28a745', marginTop: '10px', marginLeft: '10px' }}>
-            💡 You have {pointsRemaining} lifestyle points remaining.
+            💡 You have {pointsRemaining} lifestyle point{pointsRemaining > 1 ? 's' : ''} remaining.
           </p>
         )}
       </div>
