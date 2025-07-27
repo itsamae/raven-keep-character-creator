@@ -1562,10 +1562,21 @@ function NonCombatStatsStep({ data, setData, onNext, onBack }) {
 
   // Calculate point costs (same as combat stats)
   const getStatCost = (targetValue) => {
+    if (targetValue <= -3) return 0; // Base value, no cost
+    
     const costs = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13];
     let total = 0;
-    for (let i = 0; i < targetValue + 3; i++) {
-      total += costs[i];
+    
+    // For value -2, we want 1 iteration (index 0), so targetValue + 3 = 1
+    // For value -1, we want 2 iterations (index 0,1), so targetValue + 3 = 2
+    // For value 0, we want 3 iterations (index 0,1,2), so targetValue + 3 = 3
+    // etc.
+    const iterations = targetValue + 3;
+    
+    for (let i = 0; i < iterations; i++) {
+      if (i < costs.length) {
+        total += costs[i];
+      }
     }
     return total;
   };
@@ -1576,12 +1587,14 @@ function NonCombatStatsStep({ data, setData, onNext, onBack }) {
   }, 0);
 
   // Calculate total points spent on sub-domains - only count values above -3
-  const subDomainPointsSpent = Object.values(subDomains).reduce((total, statValue) => {
-    // Only count the cost if the value is above -3
-    if (statValue > -3) {
-      return total + getStatCost(statValue);
-    }
-    return total;
+  const subDomainPointsSpent = Object.entries(domainDefinitions).reduce((total, [domainKey, domain]) => {
+    return domain.subDomains.reduce((subTotal, subDomainKey) => {
+      const value = subDomains[subDomainKey] || -3;
+      if (value > -3) {
+        return subTotal + getStatCost(value);
+      }
+      return subTotal;
+    }, total);
   }, 0);
 
   // Calculate available sub-domain points from domains
@@ -1611,14 +1624,24 @@ function NonCombatStatsStep({ data, setData, onNext, onBack }) {
   const updateSubDomain = (subDomainName, newValue) => {
     if (newValue < -3 || newValue > 10) return;
     
-    const newSubDomains = { ...subDomains, [subDomainName]: newValue };
+    // Create new sub-domains object with the updated value
+    const newSubDomains = { ...subDomains };
+    if (newValue === -3) {
+      // Remove the sub-domain if it's back to -3
+      delete newSubDomains[subDomainName];
+    } else {
+      newSubDomains[subDomainName] = newValue;
+    }
     
-    // Calculate new sub-domain points spent - only count values above -3
-    const newSubDomainPointsSpent = Object.values(newSubDomains).reduce((total, statValue) => {
-      if (statValue > -3) {
-        return total + getStatCost(statValue);
-      }
-      return total;
+    // Calculate new sub-domain points spent - using the same method as initial calculation
+    const newSubDomainPointsSpent = Object.entries(domainDefinitions).reduce((total, [domainKey, domain]) => {
+      return domain.subDomains.reduce((subTotal, subDKey) => {
+        const value = newSubDomains[subDKey] || -3;
+        if (value > -3) {
+          return subTotal + getStatCost(value);
+        }
+        return subTotal;
+      }, total);
     }, 0);
     
     if (newSubDomainPointsSpent <= availableSubDomainPoints) {
@@ -1873,7 +1896,11 @@ function NonCombatStatsStep({ data, setData, onNext, onBack }) {
                             {subDomainValue}
                           </span>
                           <button 
-                            onClick={() => updateSubDomain(subDomainKey, subDomainValue + 1)}
+                            onClick={() => {
+                              if (!isDisabled && subDomainValue < 10 && subDomainPointsRemaining > 0) {
+                                updateSubDomain(subDomainKey, subDomainValue + 1);
+                              }
+                            }}
                             disabled={subDomainValue >= 10 || subDomainPointsRemaining <= 0 || isDisabled}
                             style={{ 
                               padding: '3px 8px', 
@@ -1890,7 +1917,7 @@ function NonCombatStatsStep({ data, setData, onNext, onBack }) {
                         </div>
                       </div>
                       <div style={{ fontSize: '11px', color: '#888', marginTop: '3px' }}>
-                        Cost: {subDomainValue > -3 ? getStatCost(subDomainValue) : 0} sub-points
+                        Cost: {getStatCost(subDomainValue)} sub-points
                       </div>
                     </div>
                   );
