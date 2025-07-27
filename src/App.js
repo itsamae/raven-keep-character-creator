@@ -47,7 +47,11 @@ function App() {
         )}
         
         {currentStep === 4 && (
-          <div>Combat Stats (Coming Soon)</div>
+          <CombatStatsStep 
+            data={characterData} 
+            setData={setCharacterData} 
+            onNext={() => setCurrentStep(5)} 
+          />
         )}
       </div>
     </div>
@@ -266,6 +270,235 @@ function DepartmentSelectionStep({ data, setData, onNext }) {
       >
         Continue to Combat Stats
       </button>
+    </div>
+  );
+}
+
+function CombatStatsStep({ data, setData, onNext }) {
+  // Initialize combat stats if they don't exist
+  const combatStats = data.combatStats || {
+    strength: -3,
+    magicalPower: -3,
+    dexterity: -3,
+    speed: -3,
+    endurance: -3,
+    healingPower: -3,
+    recovery: -3
+  };
+
+  // Calculate point costs for going from -3 to target value
+  const getStatCost = (targetValue) => {
+    const costs = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13];
+    let total = 0;
+    for (let i = 0; i < targetValue + 3; i++) {
+      total += costs[i];
+    }
+    return total;
+  };
+
+  // Calculate total points spent
+  const pointsSpent = Object.values(combatStats).reduce((total, statValue) => {
+    return total + getStatCost(statValue);
+  }, 0);
+
+  const pointsRemaining = 20 - pointsSpent;
+
+  const updateStat = (statName, newValue) => {
+    if (newValue < -3 || newValue > 10) return;
+    
+    const newStats = { ...combatStats, [statName]: newValue };
+    const newPointsSpent = Object.values(newStats).reduce((total, statValue) => {
+      return total + getStatCost(statValue);
+    }, 0);
+    
+    if (newPointsSpent <= 20) {
+      setData(prev => ({ ...prev, combatStats: newStats }));
+    }
+  };
+
+  // Get stat effects for display
+  const getStatEffects = (statName, value) => {
+    switch (statName) {
+      case 'strength':
+      case 'dexterity':
+      case 'magicalPower':
+        if (value === -3) return "Cannot use weapons, auto fail saves";
+        if (value === -2) return "Cannot use weapons, -100 to saves (disadvantage)";
+        if (value === -1) return "Cannot use weapons, -50 to saves (disadvantage)";
+        if (value === 0) return "Can use weapons at disadvantage, no save bonus";
+        return `+${value * 20} to weapon attacks and saves`;
+      
+      case 'speed':
+        const turns = value <= 4 ? 1 : value <= 9 ? 2 : 3;
+        let initiative;
+        if (value === -3) initiative = -200;
+        else if (value === -2) initiative = -100;
+        else if (value === -1) initiative = -50;
+        else initiative = value * 20;
+        return `${turns} turn${turns > 1 ? 's' : ''} per round, ${initiative >= 0 ? '+' : ''}${initiative} initiative`;
+      
+      case 'endurance':
+        let hp;
+        if (value <= 0) hp = 250 + (value + 3) * 50;
+        else if (value <= 2) hp = 300 + value * 50;
+        else if (value === 3) hp = 500;
+        else if (value <= 5) hp = 500 + (value - 3) * 50;
+        else if (value === 6) hp = 700;
+        else if (value <= 8) hp = 700 + (value - 6) * 50;
+        else if (value === 9) hp = 900;
+        else hp = 1000;
+        
+        let saves;
+        if (value === -3) saves = "auto fail END saves";
+        else if (value === -2) saves = "-100 END saves (disadvantage)";
+        else if (value === -1) saves = "-50 END saves (disadvantage)";
+        else if (value === 0) saves = "no save bonus";
+        else saves = `+${value * 20} END saves`;
+        
+        return `${hp} HP, ${saves}`;
+      
+      case 'healingPower':
+        if (value === -3) return "Only self-heal via consumables (lowest value), no abilities";
+        if (value === -2) return "Only self-heal via consumables (disadvantage), no abilities";
+        if (value === -1) return "Only self-heal via consumables, no abilities";
+        if (value === 0) return "Can heal others at disadvantage, no bonus";
+        return `+${value * 20} bonus to healing rolls`;
+      
+      case 'recovery':
+        const apRecovery = 2 + value;
+        return `Recover ${apRecovery} AP per turn`;
+      
+      default:
+        return "";
+    }
+  };
+
+  const statDescriptions = {
+    strength: "Increases damage with STR-based weapons",
+    magicalPower: "Increases damage done with spells", 
+    dexterity: "Increases damage with DEX-based weapons",
+    speed: "Determines initiative and attacks per round",
+    endurance: "Determines HP and physical resistance",
+    healingPower: "Increases bonus healing amount",
+    recovery: "Increases Action Points recovered per round"
+  };
+
+  const statNames = {
+    strength: "Strength",
+    magicalPower: "Magical Power",
+    dexterity: "Dexterity", 
+    speed: "Speed",
+    endurance: "Endurance",
+    healingPower: "Healing Power",
+    recovery: "Recovery"
+  };
+
+  return (
+    <div>
+      <h2>Combat Stats Allocation</h2>
+      <p>Allocate your 20 combat stat points. All stats start at -3.</p>
+      
+      <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#f8f9fa', border: '1px solid #ddd', borderRadius: '5px' }}>
+        <strong>Points Remaining: {pointsRemaining}</strong>
+        {pointsRemaining < 0 && <span style={{ color: 'red' }}> (Over limit!)</span>}
+      </div>
+
+      {Object.entries(combatStats).map(([statName, value]) => (
+        <div key={statName} style={{ 
+          marginBottom: '25px', 
+          padding: '15px', 
+          border: '1px solid #ddd', 
+          borderRadius: '5px',
+          backgroundColor: 'white'
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+            <div>
+              <h3 style={{ margin: '0', color: '#333' }}>{statNames[statName]}</h3>
+              <p style={{ margin: '5px 0', fontSize: '14px', color: '#666' }}>{statDescriptions[statName]}</p>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <button 
+                onClick={() => updateStat(statName, value - 1)}
+                disabled={value <= -3}
+                style={{ 
+                  padding: '5px 10px', 
+                  fontSize: '16px',
+                  backgroundColor: value > -3 ? '#dc3545' : '#ccc',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '3px',
+                  cursor: value > -3 ? 'pointer' : 'not-allowed'
+                }}
+              >
+                -
+              </button>
+              <span style={{ 
+                minWidth: '40px', 
+                textAlign: 'center', 
+                fontSize: '18px', 
+                fontWeight: 'bold',
+                padding: '5px 10px',
+                backgroundColor: '#f8f9fa',
+                border: '1px solid #ddd',
+                borderRadius: '3px'
+              }}>
+                {value}
+              </span>
+              <button 
+                onClick={() => updateStat(statName, value + 1)}
+                disabled={value >= 10 || pointsRemaining <= 0}
+                style={{ 
+                  padding: '5px 10px', 
+                  fontSize: '16px',
+                  backgroundColor: (value < 10 && pointsRemaining > 0) ? '#28a745' : '#ccc',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '3px',
+                  cursor: (value < 10 && pointsRemaining > 0) ? 'pointer' : 'not-allowed'
+                }}
+              >
+                +
+              </button>
+            </div>
+          </div>
+          
+          <div style={{ 
+            padding: '10px', 
+            backgroundColor: '#f0f8ff', 
+            borderRadius: '3px',
+            fontSize: '14px',
+            fontStyle: 'italic'
+          }}>
+            <strong>Effect:</strong> {getStatEffects(statName, value)}
+          </div>
+          
+          <div style={{ fontSize: '12px', color: '#888', marginTop: '5px' }}>
+            Cost: {getStatCost(value)} points
+          </div>
+        </div>
+      ))}
+
+      <button 
+        onClick={onNext}
+        disabled={pointsRemaining !== 0}
+        style={{ 
+          padding: '12px 24px', 
+          fontSize: '16px',
+          backgroundColor: pointsRemaining === 0 ? '#007bff' : '#ccc',
+          color: 'white',
+          border: 'none',
+          borderRadius: '5px',
+          cursor: pointsRemaining === 0 ? 'pointer' : 'not-allowed'
+        }}
+      >
+        Continue to Non-Combat Stats
+      </button>
+      
+      {pointsRemaining !== 0 && (
+        <p style={{ color: '#dc3545', marginTop: '10px' }}>
+          You must spend all 20 points to continue.
+        </p>
+      )}
     </div>
   );
 }
