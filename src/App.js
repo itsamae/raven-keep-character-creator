@@ -1562,80 +1562,80 @@ function NonCombatStatsStep({ data, setData, onNext, onBack }) {
   };
 
   const getStatCost = (targetValue) => {
-    const costs = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13];
-    let total = 0;
-    for (let i = 0; i < targetValue + 3; i++) {
-      total += costs[i];
-    }
-    return total;
-  };
+  const costs = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13];
+  let total = 0;
+  for (let i = 0; i < targetValue + 3; i++) {
+    total += costs[i];
+  }
+  return total;
+};
 
-  const getPointCostDelta = (from, to) => {
-    const cost = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13];
-    let delta = 0;
-    for (let i = from + 3; i < to + 3; i++) {
-      delta += cost[i];
-    }
-    return delta;
-  };
+const getPointCostDelta = (from, to) => {
+  const cost = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13];
+  let delta = 0;
+  for (let i = from + 3; i < to + 3; i++) {
+    delta += cost[i];
+  }
+  return delta;
+};
 
-  const domainPointsSpent = Object.values(domains).reduce((total, statValue) => {
-    return total + getStatCost(statValue);
+const getAvailableSubDomainPoints = (domains) => {
+  return Object.values(domains).reduce((total, domainValue) => {
+    return total + (domainValue > -3 ? (domainValue + 3) * 3 : 0);
   }, 0);
+};
 
-  const domainPointsRemaining = 180 - domainPointsSpent;
+const getSubDomainPointsSpent = (subDomainObj) => {
+  return Object.values(subDomainObj).reduce((total, statValue) => {
+    return total + getStatCost(statValue ?? -3);
+  }, 0);
+};
 
-  const getAvailableSubDomainPoints = () => {
-    return Object.values(domains).reduce((total, domainValue) => {
-      return total + (domainValue > -3 ? (domainValue + 3) * 3 : 0);
-    }, 0);
-  };
+const getStatModifier = (value) => {
+  if (value === -3) return -200;
+  if (value === -2) return -100;
+  if (value === -1) return -50;
+  if (value === 0) return 0;
+  return value * 20;
+};
 
-  const getSubDomainPointsSpent = (subDomainObj) => {
-    return Object.values(subDomainObj).reduce((total, statValue) => {
-      return total + getStatCost(statValue ?? -3);
-    }, 0);
-  };
+const getTrainingStatus = (value) => {
+  return value >= 1 ? 'Trained' : 'Untrained';
+};
 
-  const updateDomain = (domainName, newValue) => {
-    if (newValue < -3 || newValue > 10) return;
-    const newDomains = { ...domains, [domainName]: newValue };
-    if (Object.values(newDomains).reduce((total, val) => total + getStatCost(val), 0) <= 180) {
-      setData(prev => ({ ...prev, domains: newDomains }));
-    }
-  };
+const getSubDomainValue = (value) => value ?? -3;
 
-  const updateSubDomain = (subDomainName, newValue) => {
+const updateDomain = (domainName, newValue, domains, setData) => {
   if (newValue < -3 || newValue > 10) return;
+  const newDomains = { ...domains, [domainName]: newValue };
+  const domainPointsSpent = Object.values(newDomains).reduce((total, val) => total + getStatCost(val), 0);
+  if (domainPointsSpent <= 180) {
+    setData(prev => ({ ...prev, domains: newDomains }));
+  }
+};
 
+const updateSubDomain = (subDomainName, newValue, domains, setData) => {
+  if (newValue < -3 || newValue > 10) return;
   setData(prev => {
     const newSubDomains = { ...prev.subDomains, [subDomainName]: newValue };
-
-    const totalSubDomainCost = Object.values(newSubDomains).reduce((total, val) => {
-      return total + getStatCost(val);
-    }, 0);
-
-    const available = getAvailableSubDomainPoints();
-
-    if (totalSubDomainCost > available) return prev;  // Don't update if exceeding points
-
+    const totalSubDomainCost = Object.values(newSubDomains).reduce((total, val) => total + getStatCost(val), 0);
+    const available = getAvailableSubDomainPoints(domains);
+    if (totalSubDomainCost > available) return prev;
     return { ...prev, subDomains: newSubDomains };
   });
 };
 
-
-
-  const resetStats = () => {
-    const resetDomains = {
-      wisdom: -3,
-      intelligence: -3,
-      deftness: -3,
-      charisma: -3,
-      instinct: -3,
-      empathy: -3
-    };
-    setData(prev => ({ ...prev, domains: resetDomains, subDomains: {} }));
+const resetStats = (setData) => {
+  const resetDomains = {
+    wisdom: -3,
+    intelligence: -3,
+    deftness: -3,
+    charisma: -3,
+    instinct: -3,
+    empathy: -3
   };
+  setData(prev => ({ ...prev, domains: resetDomains, subDomains: {} }));
+};
 
   const getStatModifier = (value) => {
     if (value === -3) return -200;
