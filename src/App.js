@@ -447,6 +447,323 @@ function CharacterBasicsStep({ data, setData, onNext }) {
   );
 }
 
+// Step 3: Reputation & Factions
+function ReputationStep({ data, setData, onNext }) {
+  const reputationTiers = [
+    {
+      name: 'Hated',
+      range: '(-500 to -301)',
+      color: '#dc3545',
+      description: 'The faction despises you. You are viewed as a direct threat, criminal, traitor, heretic, or enemy. Members will refuse to aid or work with you; may attack on sight in some RP settings. Cannot engage in faction quests, trade, or events. Redemption requires a significant in-character arc and staff approval.'
+    },
+    {
+      name: 'Distrusted',
+      range: '(-300 to -101)',
+      color: '#fd7e14',
+      description: 'Known, but negatively perceived. Faction members may tolerate your presence, but interactions are strained, cold, or monitored. Cannot hold roles of power or sensitive access within the faction. Influence checks are harder; you may be penalized in social scenes or diplomacy. Can gradually improve reputation through RP or event outcomes.'
+    },
+    {
+      name: 'Tolerated',
+      range: '(-100 to -1)',
+      color: '#ffc107',
+      description: 'A neutral or unremarkable presence. You are not trusted, but not explicitly disliked. You may operate in faction spaces but are offered minimal support. Expect cold shoulders or red tape.'
+    },
+    {
+      name: 'Unknown',
+      range: '(0)',
+      color: '#6c757d',
+      description: 'You are not on their radar. No reputation bonuses applied; considered "unaligned" or "foreign." Most factions will not grant access or missions until some interaction has occurred. Some factions treat unknowns as Tolerated, others with suspicion. You must earn visibility and entry through RP.'
+    },
+    {
+      name: 'Recognized',
+      range: '(1 to 150)',
+      color: '#20c997',
+      description: 'The faction is aware of your deeds or name. You may be regarded as useful, reliable, or interesting. You can receive quests, jobs, and moderate-level support or resources. May participate in faction events and serve as an intermediary. Start earning minor perks like access to rumor networks, supply trade, or favors.'
+    },
+    {
+      name: 'Trusted',
+      range: '(151 to 350)',
+      color: '#28a745',
+      description: 'You are considered a known ally or supporter of the faction\'s goals. You are often offered sensitive work, missions of importance, or front-line access. Can represent the faction in political or cross-faction RP. Begins to unlock higher-tier faction rewards or shops. May be granted temporary authority in faction territory. Access to Faction Stores and other Faction Bonuses.'
+    },
+    {
+      name: 'Agent',
+      range: '(351 to 500)',
+      color: '#007bff',
+      description: 'You are "one of them." You may operate as a covert asset, diplomat, warrior, or embedded insider. Faction secrets, safehouses, internal resources, and personal connections become available. You may receive narrative priority in that faction\'s stories and have leverage in negotiations. Eligible for Agent Tiers in post-beta development.'
+    }
+  ];
+
+  const allFactions = {
+    'Ul\'dah & Thanalan': [
+      {
+        name: 'The Syndicate',
+        description: 'The true power behind Ul\'dah, composed of merchant-princes and oligarchs.',
+        raceBonus: ['Lalafell', 'Garlean (Pureblood)'],
+        originBonus: ['Ul\'dah & Thanalan'],
+        originPenalty: ['Ala Mhigo', 'Azim Steppe', 'Bozja']
+      },
+      {
+        name: 'Brass Blades',
+        description: 'Mercenary-style guards hired by Ul\'dah, often corrupt.',
+        raceBonus: [],
+        originBonus: ['Ul\'dah & Thanalan'],
+        originPenalty: ['Ala Mhigo', 'Azim Steppe']
+      },
+      {
+        name: 'Order of Nald\'thal',
+        description: 'Religious body controlling death and commerce.',
+        raceBonus: ['Lalafell', 'Garlean (Pureblood)'],
+        originBonus: [],
+        originPenalty: ['Gelmorra (pre-Gridanian subterranean)', 'Tural (Native Origin)']
+      },
+      {
+        name: 'Brass Blade Dissidents',
+        description: 'Royalist faction of former Brass Blades members focused on protecting poor citizens in Ul\'Dah',
+        raceBonus: [],
+        originBonus: ['Ul\'dah & Thanalan'],
+        originPenalty: []
+      },
+      {
+        name: 'The Sandguard Militia',
+        description: 'Former Royalist militia group protecting the greater Thanalan region, however they have caved to Syndicate pressure in recent years to work in line with them -- however the protection of citizens across Thanalan remains their priority',
+        raceBonus: [],
+        originBonus: ['Ul\'dah & Thanalan'],
+        originPenalty: []
+      },
+      {
+        name: 'The Mirage Caravan',
+        description: 'A group of smaller business folk who unite under one banner to promote fair trade deals to remain competitive with The Syndicate',
+        raceBonus: [],
+        originBonus: ['Ul\'dah & Thanalan'],
+        originPenalty: []
+      },
+      {
+        name: 'The Amalj\'aa Tribe Coalition',
+        description: 'Multiple Amalj\'aa tribes united under one banner to preserve their culture and identity',
+        raceBonus: [],
+        originBonus: [],
+        originPenalty: [],
+        special: 'amalj\'aa'
+      }
+    ]
+  };
+
+  const getReputationLevel = (rep) => {
+    if (rep <= -301) return 'Hated';
+    if (rep <= -101) return 'Distrusted';
+    if (rep <= -1) return 'Tolerated';
+    if (rep === 0) return 'Unknown';
+    if (rep <= 150) return 'Recognized';
+    if (rep <= 350) return 'Trusted';
+    return 'Agent';
+  };
+
+  const getReputationColor = (rep) => {
+    const tier = reputationTiers.find(t => 
+      t.name === getReputationLevel(rep)
+    );
+    return tier ? tier.color : '#6c757d';
+  };
+
+  const calculateFactionReputation = (faction) => {
+    let rep = 0;
+    
+    // Special handling for Amalj'aa Coalition
+    if (faction.special === 'amalj\'aa') {
+      if (data.race === 'Amalj\'aa (Thanalan)') {
+        return 150; // Special bonus
+      } else {
+        return -200; // Special penalty for non-Amalj'aa
+      }
+    }
+    
+    // Standard calculation
+    if (faction.raceBonus.includes(data.race)) rep += 20;
+    if (faction.originBonus.includes(data.origin)) rep += 20;
+    if (faction.originPenalty.includes(data.origin)) rep -= 20;
+    
+    return rep;
+  };
+
+  return (
+    <div>
+      <h2>Reputation & Factions</h2>
+      <p>Your character's reputation with various factions shapes their opportunities and interactions in the world.</p>
+      
+      {/* Reputation Tier Explanation */}
+      <div style={{ marginBottom: '30px' }}>
+        <h3>How Reputation Tiers Work</h3>
+        <div style={{ display: 'grid', gap: '10px' }}>
+          {reputationTiers.map(tier => (
+            <div key={tier.name} style={{ 
+              padding: '15px', 
+              border: `2px solid ${tier.color}`, 
+              borderRadius: '5px',
+              backgroundColor: 'white'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
+                <div style={{ 
+                  width: '20px', 
+                  height: '20px', 
+                  backgroundColor: tier.color, 
+                  borderRadius: '50%', 
+                  marginRight: '10px' 
+                }}></div>
+                <h4 style={{ margin: 0, color: tier.color }}>
+                  {tier.name} {tier.range}
+                </h4>
+              </div>
+              <p style={{ margin: 0, fontSize: '14px', lineHeight: '1.4' }}>
+                {tier.description}
+              </p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Reputation Tracking Notes */}
+      <div style={{ 
+        marginBottom: '30px', 
+        padding: '15px', 
+        backgroundColor: '#e9ecef', 
+        borderRadius: '5px' 
+      }}>
+        <h4 style={{ margin: '0 0 10px 0' }}>Reputation Tracking Notes</h4>
+        <ul style={{ margin: 0, paddingLeft: '20px' }}>
+          <li>Reputation may be earned through RP, influence point investment, event participation, or story arcs.</li>
+          <li>Staff may assign reputation shifts during faction events based on character behavior and narrative impact.</li>
+          <li>Faction leaders (PC or NPC) may petition staff to shift someone's standing within their group.</li>
+          <li>Players may begin with a predefined reputation based on their race, region, or background, using your earlier reputation modifier table.</li>
+        </ul>
+      </div>
+
+      {/* Current Character's Reputation */}
+      <div style={{ marginBottom: '30px' }}>
+        <h3>Your Starting Reputation</h3>
+        <p style={{ marginBottom: '15px' }}>
+          <strong>Character:</strong> {data.name} ({data.race} from {data.origin})
+        </p>
+        
+        {/* Ul'dah & Thanalan Factions */}
+        <div style={{ marginBottom: '20px' }}>
+          <h4 style={{ 
+            margin: '0 0 15px 0', 
+            padding: '10px', 
+            backgroundColor: '#d4b106', 
+            color: 'white', 
+            borderRadius: '5px' 
+          }}>
+            Ul'dah & Thanalan Factions
+          </h4>
+          
+          <div style={{ display: 'grid', gap: '15px' }}>
+            {allFactions['Ul\'dah & Thanalan'].map(faction => {
+              const rep = calculateFactionReputation(faction);
+              const level = getReputationLevel(rep);
+              const color = getReputationColor(rep);
+              
+              return (
+                <div key={faction.name} style={{ 
+                  padding: '15px', 
+                  border: `2px solid ${color}`, 
+                  borderRadius: '5px',
+                  backgroundColor: 'white'
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
+                    <div>
+                      <h5 style={{ margin: '0 0 5px 0', fontSize: '16px' }}>{faction.name}</h5>
+                      <p style={{ margin: '0', fontSize: '14px', color: '#666', lineHeight: '1.3' }}>
+                        {faction.description}
+                      </p>
+                    </div>
+                    <div style={{ textAlign: 'right', minWidth: '120px', marginLeft: '15px' }}>
+                      <div style={{ 
+                        fontSize: '18px', 
+                        fontWeight: 'bold', 
+                        color: color,
+                        marginBottom: '5px'
+                      }}>
+                        {rep > 0 ? '+' : ''}{rep}
+                      </div>
+                      <div style={{ 
+                        fontSize: '14px', 
+                        fontWeight: 'bold', 
+                        color: color,
+                        padding: '2px 8px',
+                        backgroundColor: `${color}20`,
+                        borderRadius: '3px'
+                      }}>
+                        {level}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Show modifiers */}
+                  <div style={{ fontSize: '12px', color: '#666' }}>
+                    {faction.raceBonus.includes(data.race) && (
+                      <span style={{ color: '#28a745', marginRight: '15px' }}>
+                        ✓ Race Bonus: +20
+                      </span>
+                    )}
+                    {faction.originBonus.includes(data.origin) && (
+                      <span style={{ color: '#28a745', marginRight: '15px' }}>
+                        ✓ Origin Bonus: +20
+                      </span>
+                    )}
+                    {faction.originPenalty.includes(data.origin) && (
+                      <span style={{ color: '#dc3545', marginRight: '15px' }}>
+                        ✗ Origin Penalty: -20
+                      </span>
+                    )}
+                    {faction.special === 'amalj\'aa' && data.race === 'Amalj\'aa (Thanalan)' && (
+                      <span style={{ color: '#007bff', marginRight: '15px' }}>
+                        ★ Special Amalj'aa Bonus: +150
+                      </span>
+                    )}
+                    {faction.special === 'amalj\'aa' && data.race !== 'Amalj\'aa (Thanalan)' && (
+                      <span style={{ color: '#dc3545', marginRight: '15px' }}>
+                        ★ Non-Amalj'aa Penalty: -200
+                      </span>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        <div style={{ 
+          padding: '15px', 
+          backgroundColor: '#f8f9fa', 
+          borderRadius: '5px',
+          fontStyle: 'italic',
+          color: '#666'
+        }}>
+          <strong>Note:</strong> More factions will be added in later versions of the beta.
+        </div>
+      </div>
+
+      <button 
+        onClick={onNext}
+        style={{ 
+          padding: '12px 24px', 
+          fontSize: '16px',
+          backgroundColor: '#007bff',
+          color: 'white',
+          border: 'none',
+          borderRadius: '5px',
+          cursor: 'pointer'
+        }}
+      >
+        Continue to Non-Combat Stats
+      </button>
+    </div>
+  );
+}
+
+
+
 
 
 
