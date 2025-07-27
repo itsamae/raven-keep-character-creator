@@ -1605,7 +1605,7 @@ function NonCombatStatsStep({ data, setData, onNext, onBack }) {
     }
   };
 
-  const updateSubDomain = (subDomainName, newValue) => {
+  const  = (subDomainName, newValue) => {
   if (newValue < -3 || newValue > 10) return;
 
   setData(prev => {
@@ -1853,21 +1853,34 @@ function NonCombatStatsStep({ data, setData, onNext, onBack }) {
                             </div>
                           </div>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                            <button 
-                              onClick={() => updateSubDomain(subDomainKey, subDomainValue - 1)}
-                              disabled={subDomainValue <= -3}
-                              style={{ 
-                                padding: '3px 8px', 
-                                fontSize: '14px',
-                                backgroundColor: subDomainValue > -3 ? '#dc3545' : '#ccc',
-                                color: 'white',
-                                border: 'none',
-                                borderRadius: '3px',
-                                cursor: subDomainValue > -3 ? 'pointer' : 'not-allowed'
-                              }}
-                            >
-                              -
-                            </button>
+                            {(() => {
+  const domainAllocated = domains[domainKey] > -3 ? (domains[domainKey] + 3) * 3 : 0;
+  const domainSubPointsUsed = domain.subDomains.reduce((sum, key) => {
+    const val = subDomains[key] ?? -3;
+    return sum + getStatCost(val);
+  }, 0);
+  const domainSubPointsRemaining = domainAllocated - domainSubPointsUsed;
+  const canIncrease = subDomainValue < 10 && domainSubPointsRemaining > 0;
+
+  return (
+    <button 
+      onClick={() => updateSubDomain(subDomainKey, subDomainValue + 1)}
+      disabled={!canIncrease}
+      style={{ 
+        padding: '3px 8px', 
+        fontSize: '14px',
+        backgroundColor: canIncrease ? '#28a745' : '#ccc',
+        color: 'white',
+        border: 'none',
+        borderRadius: '3px',
+        cursor: canIncrease ? 'pointer' : 'not-allowed'
+      }}
+    >
+      +
+    </button>
+  );
+})()}
+
                             <span style={{ 
                               minWidth: '30px', 
                               textAlign: 'center', 
