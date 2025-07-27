@@ -1637,10 +1637,6 @@ const resetStats = (setData) => {
   setData(prev => ({ ...prev, domains: resetDomains, subDomains: {} }));
 };
 
-  const getTrainingStatus = (value) => {
-    return value >= 1 ? 'Trained' : 'Untrained';
-  };
-
   const subDomainPointsSpent = getSubDomainPointsSpent(subDomains);
   const availableSubDomainPoints = getAvailableSubDomainPoints();
   const subDomainPointsRemaining = availableSubDomainPoints - subDomainPointsSpent;
