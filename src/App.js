@@ -1611,24 +1611,26 @@ function NonCombatStatsStep({ data, setData, onNext, onBack }) {
   setData(prev => {
     const currentValue = prev.subDomains?.[subDomainName] ?? -3;
 
-    // Skip if nothing changed
+    // If nothing changed, skip
     if (currentValue === newValue) return prev;
 
+    // New subdomains map
     const newSubDomains = { ...prev.subDomains, [subDomainName]: newValue };
-    const domainValues = Object.values(prev.domains || {});
-    const availablePoints = domainValues.reduce((total, domainValue) => {
-      return domainValue > -3 ? total + (domainValue + 3) * 3 : total;
+
+    // 🔁 Fresh recalculation using live domain values
+    const freshAvailablePoints = Object.values(prev.domains).reduce((total, domainVal) => {
+      return domainVal > -3 ? total + (domainVal + 3) * 3 : total;
     }, 0);
 
-    const spentPoints = Object.values(newSubDomains).reduce((total, val) => {
+    const freshSpentPoints = Object.values(newSubDomains).reduce((total, val) => {
       return total + getStatCost(typeof val === 'number' ? val : -3);
     }, 0);
 
-    if (spentPoints > availablePoints) {
-      return prev; 
-    }
+    // ❌ Don't allow if it exceeds available
+    if (freshSpentPoints > freshAvailablePoints) return prev;
 
-    return { ...prev, subDomains: newSubDomains }; 
+    // ✅ Commit update
+    return { ...prev, subDomains: newSubDomains };
   });
 };
   
