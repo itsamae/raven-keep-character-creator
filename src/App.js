@@ -5,13 +5,13 @@ function App() {
   const [characterData, setCharacterData] = useState({
     name: '',
     race: '',
-    department: '',
-    // We'll add stats later
+    department: ''
   });
   
   return (
     <div style={{ padding: '20px', maxWidth: '900px', margin: '0 auto', fontFamily: 'Arial, sans-serif' }}>
       <h1>Raven's Keep Character Creator - Beta</h1>
+      
       <div style={{ marginBottom: '20px', padding: '10px', backgroundColor: '#f0f8ff', border: '1px solid #ddd', borderRadius: '5px' }}>
         <strong>Step {currentStep} of 7:</strong> 
         {currentStep === 1 && " Welcome & Agreement"}
@@ -23,13 +23,34 @@ function App() {
         {currentStep === 7 && " Character Summary"}
       </div>
       
-<div>
-  <p>Debug: Current step is {currentStep}</p>
-  {currentStep === 1 && <WelcomeStep onNext={() => setCurrentStep(2)} />}
-  {currentStep === 2 && <CharacterBasicsStep data={characterData} setData={setCharacterData} onNext={() => setCurrentStep(3)} />}
-  {currentStep === 3 && <DepartmentSelectionStep data={characterData} setData={setCharacterData} onNext={() => setCurrentStep(4)} />}
-  {currentStep === 4 && <div>Combat Stats (Coming Soon)</div>}
-</div>
+      <div>
+        <p>Debug: Current step is {currentStep}</p>
+        
+        {currentStep === 1 && (
+          <WelcomeStep onNext={() => setCurrentStep(2)} />
+        )}
+        
+        {currentStep === 2 && (
+          <CharacterBasicsStep 
+            data={characterData} 
+            setData={setCharacterData} 
+            onNext={() => setCurrentStep(3)} 
+          />
+        )}
+        
+        {currentStep === 3 && (
+          <DepartmentSelectionStep 
+            data={characterData} 
+            setData={setCharacterData} 
+            onNext={() => setCurrentStep(4)} 
+          />
+        )}
+        
+        {currentStep === 4 && (
+          <div>Combat Stats (Coming Soon)</div>
+        )}
+      </div>
+    </div>
   );
 }
 
@@ -220,4 +241,33 @@ function DepartmentSelectionStep({ data, setData, onNext }) {
                   style={{ marginRight: '10px', marginTop: '5px' }}
                 />
                 <div>
-                  <h3 style={{ margin: '0 0 5px 0', color: '#333' }}>{dept.name}
+                  <h3 style={{ margin: '0 0 5px 0', color: '#333' }}>{dept.name}</h3>
+                  <p style={{ margin: '0 0 10px 0', fontStyle: 'italic', color: '#666' }}>{dept.shortDesc}</p>
+                  <p style={{ margin: '0', fontSize: '14px', lineHeight: '1.4', color: '#555' }}>{dept.fullDesc}</p>
+                </div>
+              </div>
+            </label>
+          </div>
+        ))}
+      </div>
+      
+      <button 
+        onClick={onNext}
+        disabled={!data.department}
+        style={{ 
+          padding: '12px 24px', 
+          fontSize: '16px',
+          backgroundColor: data.department ? '#007bff' : '#ccc',
+          color: 'white',
+          border: 'none',
+          borderRadius: '5px',
+          cursor: data.department ? 'pointer' : 'not-allowed'
+        }}
+      >
+        Continue to Combat Stats
+      </button>
+    </div>
+  );
+}
+
+export default App;
