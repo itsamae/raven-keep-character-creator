@@ -1607,24 +1607,31 @@ function NonCombatStatsStep({ data, setData, onNext, onBack }) {
 
   const updateSubDomain = (subDomainName, newValue) => {
   if (newValue < -3 || newValue > 10) return;
-  
-  const currentValue = subDomains.hasOwnProperty(subDomainName) ? subDomains[subDomainName] : -3;
-  const currentCost = getStatCost(currentValue);
-  const newCost = getStatCost(newValue);
-  const costDifference = newCost - currentCost;
-  
-  // Recalculate available points with the potential new subdomain value
-  const newSubDomains = { ...subDomains, [subDomainName]: newValue };
-  const newSubDomainPointsSpent = Object.values(newSubDomains).reduce((total, statValue) => {
-  const safeValue = (typeof statValue === 'number') ? statValue : -3;
-  return total + getStatCost(safeValue);
-}, 0);
-  
-  // Check if the new total spending is within available points
-  if (newSubDomainPointsSpent <= availableSubDomainPoints) {
-    setData(prev => ({ ...prev, subDomains: newSubDomains }));
-  }
+
+  setData(prev => {
+    const currentValue = prev.subDomains?.[subDomainName] ?? -3;
+
+    // Skip if nothing changed
+    if (currentValue === newValue) return prev;
+
+    const newSubDomains = { ...prev.subDomains, [subDomainName]: newValue };
+    const domainValues = Object.values(prev.domains || {});
+    const availablePoints = domainValues.reduce((total, domainValue) => {
+      return domainValue > -3 ? total + (domainValue + 3) * 3 : total;
+    }, 0);
+
+    const spentPoints = Object.values(newSubDomains).reduce((total, val) => {
+      return total + getStatCost(typeof val === 'number' ? val : -3);
+    }, 0);
+
+    if (spentPoints > availablePoints) {
+      return prev; 
+    }
+
+    return { ...prev, subDomains: newSubDomains }; 
+  });
 };
+  
 
   const resetStats = () => {
     const resetDomains = {
