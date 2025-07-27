@@ -1616,8 +1616,9 @@ function NonCombatStatsStep({ data, setData, onNext, onBack }) {
   // Recalculate available points with the potential new subdomain value
   const newSubDomains = { ...subDomains, [subDomainName]: newValue };
   const newSubDomainPointsSpent = Object.values(newSubDomains).reduce((total, statValue) => {
-    return total + getStatCost(statValue || -3);
-  }, 0);
+  const safeValue = (typeof statValue === 'number') ? statValue : -3;
+  return total + getStatCost(safeValue);
+}, 0);
   
   // Check if the new total spending is within available points
   if (newSubDomainPointsSpent <= availableSubDomainPoints) {
