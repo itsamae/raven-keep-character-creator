@@ -1998,4 +1998,590 @@ function NonCombatStatsStep({ data, setData, onNext, onBack }) {
   );
 }
 
+// Step 5: Backgrounds
+function BackgroundsStep({ data, setData, onNext, onBack }) {
+  const backgrounds = data.backgrounds || [];
+  const backgroundPointsSpent = data.backgroundPointsSpent || 0;
+  const backgroundPointsRemaining = 200 - backgroundPointsSpent;
+
+  const positiveBackgrounds = {
+    'Social Status': [
+      {
+        id: 'noble_blood',
+        name: 'Noble Blood',
+        cost: 45,
+        description: '+1 to Persuasion, Diplomacy, Leadership\n+1500 starting gil, +150 gil/month\nAccess to noble-only areas'
+      },
+      {
+        id: 'merchant_dynasty',
+        name: 'Merchant Dynasty',
+        cost: 35,
+        description: '+2 to Commerce, +1 to Economics\n+1000 starting gil, +100 gil/month\n15% discount on all purchases'
+      }
+    ],
+    'Physical Traits': [
+      {
+        id: 'beautiful_handsome',
+        name: 'Beautiful/Handsome',
+        cost: 30,
+        description: '+80 to all Charisma-based rolls\n+2 to Seduction'
+      },
+      {
+        id: 'towering_height',
+        name: 'Towering Height',
+        cost: 15,
+        description: '+1 to Intimidation and Athletics\n+50 to physical presence checks'
+      }
+    ],
+    'Mental Traits': [
+      {
+        id: 'genius',
+        name: 'Genius',
+        cost: 120,
+        description: '+100 to all Intelligence-based rolls\n+2 skill points per level'
+      },
+      {
+        id: 'quick_witted',
+        name: 'Quick Witted',
+        cost: 25,
+        description: '+50 to Intelligence rolls\n+1 to Tactics and Investigation'
+      },
+      {
+        id: 'natural_empath',
+        name: 'Natural Empath',
+        cost: 30,
+        description: '+80 to all Empathy-based rolls\nCan sense strong emotions'
+      }
+    ],
+    'Education & Training': [
+      {
+        id: 'academy_educated',
+        name: 'Academy Educated',
+        cost: 30,
+        description: '+2 to any three Intelligence sub-domains\nCan read/write all common languages',
+        requiresSelection: true,
+        selectionType: 'intelligence_subdomains',
+        selectionCount: 3
+      },
+      {
+        id: 'military_training',
+        name: 'Military Training',
+        cost: 25,
+        description: '+2 to Tactics, Athletics, Endurance\n+1 to Leadership\n+50 gil/month veteran pension'
+      },
+      {
+        id: 'apprentice_crafter',
+        name: 'Apprentice Crafter',
+        cost: 20,
+        description: '+3 to one crafting sub-domain\nStart with journeyman tools\nSome Other Benefit To Be Determined',
+        requiresSelection: true,
+        selectionType: 'crafting_subdomain',
+        selectionCount: 1
+      }
+    ],
+    'Wealth': [
+      {
+        id: 'fabulously_wealthy',
+        name: 'Fabulously Wealthy',
+        cost: 60,
+        description: '+5000 starting gil\n+500 gil/month from investments\nOwn property in major city'
+      },
+      {
+        id: 'well_off',
+        name: 'Well-Off',
+        cost: 30,
+        description: '+2000 starting gil\n+200 gil/month income'
+      }
+    ],
+    'Special Connections': [
+      {
+        id: 'black_market_uldah',
+        name: 'Black Market - Ul\'dah',
+        cost: 20,
+        description: '+2 to Streetwise\nAccess to illegal goods from Ul\'dah\nCan fence items at 60% value\n+150 reputation with Ul\'dah black market faction'
+      },
+      {
+        id: 'black_market_limsa',
+        name: 'Black Market - Limsa Lominsa',
+        cost: 20,
+        description: '+2 to Streetwise\nSmuggling contracts available\nAccess to pirate goods\n+150 reputation with Limsa black market faction'
+      },
+      {
+        id: 'black_market_gridania',
+        name: 'Black Market - Gridania',
+        cost: 20,
+        description: '+2 to Streetwise\nAccess to rare botanicals\nPoaching contracts available\n+150 reputation with Gridania black market faction'
+      },
+      {
+        id: 'grand_company_veteran',
+        name: 'Grand Company Veteran',
+        cost: 25,
+        description: '+150 reputation with one Grand Company\n+1 to Leadership\nAccess to GC quartermaster',
+        requiresSelection: true,
+        selectionType: 'grand_company',
+        selectionCount: 1
+      }
+    ],
+    'Special Abilities': [
+      {
+        id: 'aether_touched',
+        name: 'Aether-Touched',
+        cost: 40,
+        description: '+2 to Aetheric Sense and Arcana\nCan see aetheric flows\n+100 to aether-related checks'
+      },
+      {
+        id: 'lucky',
+        name: 'Lucky',
+        cost: 35,
+        description: 'Reroll one failed check per session\n+50 to Gambling rolls'
+      },
+      {
+        id: 'photographic_memory',
+        name: 'Photographic Memory',
+        cost: 25,
+        description: '+2 to all knowledge sub-domains\n+100 to memory-based checks'
+      }
+    ]
+  };
+
+  const negativeBackgrounds = {
+    'Social Status': [
+      {
+        id: 'street_rat',
+        name: 'Street Rat',
+        points: 25,
+        description: 'Only 50 starting gil'
+      },
+      {
+        id: 'poor',
+        name: 'Poor',
+        points: 40,
+        description: 'No starting gil'
+      },
+      {
+        id: 'hideous',
+        name: 'Hideous',
+        points: 20,
+        description: '-100 to all Charisma rolls (except Intimidation)\n+2 to Intimidation'
+      }
+    ],
+    'Burdens': [
+      {
+        id: 'cursed',
+        name: 'Cursed',
+        points: 30,
+        description: 'GM can force reroll of one success per session\n-100 to all rolls every 13th roll attempt'
+      },
+      {
+        id: 'chronic_illness',
+        name: 'Chronic Illness',
+        points: 25,
+        description: '-1 to STR, DEX, END\nRequires 50 gil/month medicine'
+      },
+      {
+        id: 'dark_secret',
+        name: 'Dark Secret',
+        points: 20,
+        description: 'Requires approval from staff and write up\nIf exposed (GM discretion), lose 200 reputation with all factions\n+1 to Deception'
+      }
+    ]
+  };
+
+  const intelligenceSubdomains = [
+    'history', 'culturalKnowledge', 'academics', 'tactics', 'engineering', 'magitek',
+    'arcana', 'investigation', 'alchemy', 'astrology', 'cartography', 'linguistics',
+    'economics', 'law', 'cryptography', 'appraisal'
+  ];
+
+  const craftingSubdomains = [
+    'precisionCrafts', 'weaving', 'leatherworking', 'goldsmithing', 'carpentry',
+    'gemCrafting', 'blacksmithing', 'brewing', 'alchemy'
+  ];
+
+  const grandCompanies = [
+    'Immortal Flames', 'Order of the Twin Adder', 'The Maelstrom'
+  ];
+
+  const isBackgroundSelected = (backgroundId) => {
+    return backgrounds.some(bg => bg.id === backgroundId);
+  };
+
+  const getBackgroundSelection = (backgroundId) => {
+    const background = backgrounds.find(bg => bg.id === backgroundId);
+    return background ? background.selection : null;
+  };
+
+  const toggleBackground = (background, isNegative = false) => {
+    const currentlySelected = isBackgroundSelected(background.id);
+    
+    if (currentlySelected) {
+      // Remove background
+      const newBackgrounds = backgrounds.filter(bg => bg.id !== background.id);
+      const newPointsSpent = isNegative 
+        ? backgroundPointsSpent + background.points
+        : backgroundPointsSpent - background.cost;
+      
+      setData(prev => ({
+        ...prev,
+        backgrounds: newBackgrounds,
+        backgroundPointsSpent: newPointsSpent
+      }));
+    } else {
+      // Add background
+      const costOrPoints = isNegative ? background.points : background.cost;
+      const newPointsSpent = isNegative 
+        ? backgroundPointsSpent - background.points
+        : backgroundPointsSpent + background.cost;
+      
+      if (!isNegative && newPointsSpent > 200) return; // Can't exceed point limit for positive backgrounds
+      if (isNegative && newPointsSpent < 0) return; // Can't go negative with negative backgrounds
+      
+      const newBackground = { ...background, selection: null };
+      setData(prev => ({
+        ...prev,
+        backgrounds: [...backgrounds, newBackground],
+        backgroundPointsSpent: newPointsSpent
+      }));
+    }
+  };
+
+  const updateBackgroundSelection = (backgroundId, selection) => {
+    const newBackgrounds = backgrounds.map(bg => 
+      bg.id === backgroundId ? { ...bg, selection } : bg
+    );
+    setData(prev => ({ ...prev, backgrounds: newBackgrounds }));
+  };
+
+  const resetBackgrounds = () => {
+    setData(prev => ({
+      ...prev,
+      backgrounds: [],
+      backgroundPointsSpent: 0
+    }));
+  };
+
+  return (
+    <div>
+      <h2>Backgrounds</h2>
+      <p>You start with 200 background points to spend on positive traits, or you can take negative backgrounds to gain additional points. You don't have to spend all points - any leftover points are simply lost.</p>
+      
+      {/* Points Summary */}
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center',
+        marginBottom: '20px', 
+        padding: '15px', 
+        backgroundColor: '#f8f9fa', 
+        border: '1px solid #ddd', 
+        borderRadius: '5px' 
+      }}>
+        <div>
+          <strong>Background Points:</strong> {backgroundPointsSpent} / 200 
+          <span style={{ color: '#666', marginLeft: '10px' }}>({backgroundPointsRemaining} remaining)</span>
+        </div>
+        <button 
+          onClick={resetBackgrounds}
+          style={{ 
+            padding: '8px 16px', 
+            fontSize: '14px',
+            backgroundColor: '#6c757d',
+            color: 'white',
+            border: 'none',
+            borderRadius: '5px',
+            cursor: 'pointer'
+          }}
+        >
+          Reset All Backgrounds
+        </button>
+      </div>
+
+      {/* Positive Backgrounds */}
+      <div style={{ marginBottom: '30px' }}>
+        <h3 style={{ color: '#28a745' }}>Positive Backgrounds (Cost Points)</h3>
+        
+        {Object.entries(positiveBackgrounds).map(([categoryName, categoryBackgrounds]) => (
+          <div key={categoryName} style={{ marginBottom: '25px' }}>
+            <h4 style={{ margin: '0 0 15px 0', color: '#333' }}>{categoryName}</h4>
+            
+            <div style={{ display: 'grid', gap: '15px' }}>
+              {categoryBackgrounds.map(background => {
+                const isSelected = isBackgroundSelected(background.id);
+                const canAfford = backgroundPointsRemaining >= background.cost;
+                const canSelect = !isSelected && canAfford;
+                
+                return (
+                  <div key={background.id} style={{ 
+                    padding: '15px', 
+                    border: `2px solid ${isSelected ? '#28a745' : '#ddd'}`, 
+                    borderRadius: '5px',
+                    backgroundColor: isSelected ? '#f0fff0' : 'white'
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
+                          <h5 style={{ margin: '0', fontSize: '16px', marginRight: '15px' }}>
+                            {background.name}
+                          </h5>
+                          <span style={{ 
+                            padding: '2px 8px', 
+                            backgroundColor: '#28a745', 
+                            color: 'white', 
+                            borderRadius: '3px', 
+                            fontSize: '12px',
+                            fontWeight: 'bold'
+                          }}>
+                            {background.cost} points
+                          </span>
+                          <button
+                            onClick={() => toggleBackground(background, false)}
+                            disabled={!canSelect && !isSelected}
+                            style={{
+                              marginLeft: '10px',
+                              padding: '4px 8px',
+                              fontSize: '12px',
+                              backgroundColor: isSelected ? '#dc3545' : '#28a745',
+                              color: 'white',
+                              border: 'none',
+                              borderRadius: '3px',
+                              cursor: (canSelect || isSelected) ? 'pointer' : 'not-allowed',
+                              opacity: (canSelect || isSelected) ? 1 : 0.5
+                            }}
+                          >
+                            {isSelected ? 'Remove' : 'Select'}
+                          </button>
+                        </div>
+                        
+                        <div style={{ fontSize: '14px', marginBottom: '10px', whiteSpace: 'pre-line' }}>
+                          {background.description}
+                        </div>
+
+                        {/* Selection dropdowns for backgrounds that require them */}
+                        {isSelected && background.requiresSelection && (
+                          <div style={{ marginTop: '10px' }}>
+                            {background.selectionType === 'intelligence_subdomains' && (
+                              <div>
+                                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+                                  Select {background.selectionCount} Intelligence Sub-domains:
+                                </label>
+                                <select 
+                                  multiple 
+                                  size="5"
+                                  value={getBackgroundSelection(background.id) || []}
+                                  onChange={(e) => {
+                                    const selected = Array.from(e.target.selectedOptions, option => option.value);
+                                    if (selected.length <= background.selectionCount) {
+                                      updateBackgroundSelection(background.id, selected);
+                                    }
+                                  }}
+                                  style={{ 
+                                    width: '100%', 
+                                    padding: '5px',
+                                    border: '1px solid #ddd',
+                                    borderRadius: '3px'
+                                  }}
+                                >
+                                  {intelligenceSubdomains.map(subdomain => (
+                                    <option key={subdomain} value={subdomain}>
+                                      {subdomain.charAt(0).toUpperCase() + subdomain.slice(1)}
+                                    </option>
+                                  ))}
+                                </select>
+                                <div style={{ fontSize: '12px', color: '#666', marginTop: '5px' }}>
+                                  Hold Ctrl/Cmd to select multiple. Selected: {(getBackgroundSelection(background.id) || []).length}/{background.selectionCount}
+                                </div>
+                              </div>
+                            )}
+                            
+                            {background.selectionType === 'crafting_subdomain' && (
+                              <div>
+                                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+                                  Select Crafting Sub-domain:
+                                </label>
+                                <select 
+                                  value={getBackgroundSelection(background.id) || ''}
+                                  onChange={(e) => updateBackgroundSelection(background.id, e.target.value)}
+                                  style={{ 
+                                    width: '100%', 
+                                    padding: '5px',
+                                    border: '1px solid #ddd',
+                                    borderRadius: '3px'
+                                  }}
+                                >
+                                  <option value="">Select a crafting skill...</option>
+                                  {craftingSubdomains.map(subdomain => (
+                                    <option key={subdomain} value={subdomain}>
+                                      {subdomain.charAt(0).toUpperCase() + subdomain.slice(1)}
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
+                            )}
+                            
+                            {background.selectionType === 'grand_company' && (
+                              <div>
+                                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+                                  Select Grand Company:
+                                </label>
+                                <select 
+                                  value={getBackgroundSelection(background.id) || ''}
+                                  onChange={(e) => updateBackgroundSelection(background.id, e.target.value)}
+                                  style={{ 
+                                    width: '100%', 
+                                    padding: '5px',
+                                    border: '1px solid #ddd',
+                                    borderRadius: '3px'
+                                  }}
+                                >
+                                  <option value="">Select a Grand Company...</option>
+                                  {grandCompanies.map(company => (
+                                    <option key={company} value={company}>
+                                      {company}
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Negative Backgrounds */}
+      <div style={{ marginBottom: '30px' }}>
+        <h3 style={{ color: '#dc3545' }}>Negative Backgrounds (Grant Points)</h3>
+        
+        {Object.entries(negativeBackgrounds).map(([categoryName, categoryBackgrounds]) => (
+          <div key={categoryName} style={{ marginBottom: '25px' }}>
+            <h4 style={{ margin: '0 0 15px 0', color: '#333' }}>{categoryName}</h4>
+            
+            <div style={{ display: 'grid', gap: '15px' }}>
+              {categoryBackgrounds.map(background => {
+                const isSelected = isBackgroundSelected(background.id);
+                
+                return (
+                  <div key={background.id} style={{ 
+                    padding: '15px', 
+                    border: `2px solid ${isSelected ? '#dc3545' : '#ddd'}`, 
+                    borderRadius: '5px',
+                    backgroundColor: isSelected ? '#fff0f0' : 'white'
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
+                          <h5 style={{ margin: '0', fontSize: '16px', marginRight: '15px' }}>
+                            {background.name}
+                          </h5>
+                          <span style={{ 
+                            padding: '2px 8px', 
+                            backgroundColor: '#dc3545', 
+                            color: 'white', 
+                            borderRadius: '3px', 
+                            fontSize: '12px',
+                            fontWeight: 'bold'
+                          }}>
+                            +{background.points} points
+                          </span>
+                          <button
+                            onClick={() => toggleBackground(background, true)}
+                            style={{
+                              marginLeft: '10px',
+                              padding: '4px 8px',
+                              fontSize: '12px',
+                              backgroundColor: isSelected ? '#6c757d' : '#dc3545',
+                              color: 'white',
+                              border: 'none',
+                              borderRadius: '3px',
+                              cursor: 'pointer'
+                            }}
+                          >
+                            {isSelected ? 'Remove' : 'Take Burden'}
+                          </button>
+                        </div>
+                        
+                        <div style={{ fontSize: '14px', whiteSpace: 'pre-line' }}>
+                          {background.description}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Selected Backgrounds Summary */}
+      {backgrounds.length > 0 && (
+        <div style={{ 
+          marginBottom: '20px', 
+          padding: '15px', 
+          backgroundColor: '#e9ecef', 
+          borderRadius: '5px' 
+        }}>
+          <h4 style={{ margin: '0 0 10px 0' }}>Selected Backgrounds:</h4>
+          <div style={{ display: 'grid', gap: '5px' }}>
+            {backgrounds.map(bg => (
+              <div key={bg.id} style={{ fontSize: '14px' }}>
+                • {bg.name} {bg.cost ? `(-${bg.cost} points)` : `(+${bg.points} points)`}
+                {bg.selection && (
+                  <span style={{ color: '#666', marginLeft: '10px' }}>
+                    → {Array.isArray(bg.selection) ? bg.selection.join(', ') : bg.selection}
+                  </span>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <div style={{ display: 'flex', gap: '10px' }}>
+        <button 
+          onClick={onBack}
+          style={{ 
+            padding: '12px 24px', 
+            fontSize: '16px',
+            backgroundColor: '#6c757d',
+            color: 'white',
+            border: 'none',
+            borderRadius: '5px',
+            cursor: 'pointer'
+          }}
+        >
+          ← Back to Non-Combat Stats
+        </button>
+        
+        <button 
+          onClick={onNext}
+          style={{ 
+            padding: '12px 24px', 
+            fontSize: '16px',
+            backgroundColor: '#007bff',
+            color: 'white',
+            border: 'none',
+            borderRadius: '5px',
+            cursor: 'pointer'
+          }}
+        >
+          Continue to Lifestyles
+        </button>
+        
+        {backgroundPointsRemaining > 0 && (
+          <p style={{ color: '#28a745', marginTop: '10px', marginLeft: '10px' }}>
+            💡 You have {backgroundPointsRemaining} background points remaining.
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default App;
