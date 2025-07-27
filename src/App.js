@@ -1561,8 +1561,7 @@ function NonCombatStatsStep({ data, setData, onNext, onBack }) {
     acting: 'Acting - Conveying genuine emotion and narrative through performance, embodying characters authentically, and passing yourself off genuinely as another person'
   };
 
-  // Calculate point costs (same as combat stats)
-  const getStatCost = (targetValue) => {
+   const getStatCost = (targetValue) => {
     const costs = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13];
     let total = 0;
     for (let i = 0; i < targetValue + 3; i++) {
@@ -1571,49 +1570,38 @@ function NonCombatStatsStep({ data, setData, onNext, onBack }) {
     return total;
   };
 
-  // Calculate total points spent on domains
   const domainPointsSpent = Object.values(domains).reduce((total, statValue) => {
     return total + getStatCost(statValue);
   }, 0);
 
-  // Calculate total points spent on sub-domains
-  const subDomainPointsSpent = Object.values(subDomains).reduce((total, statValue) => {
-    return total + getStatCost(statValue || -3);
-  }, 0);
-
-  // Calculate available sub-domain points from domains
-  const availableSubDomainPoints = Object.values(domains).reduce((total, domainValue) => {
-    if (domainValue > -3) {
-      return total + ((domainValue + 3) * 3); // 3 sub-points per domain point above -3
-    }
-    return total;
-  }, 0);
-
   const domainPointsRemaining = 180 - domainPointsSpent;
-  const subDomainPointsRemaining = availableSubDomainPoints - subDomainPointsSpent;
+
+  const getAvailableSubDomainPoints = () => {
+    return Object.values(domains).reduce((total, domainValue) => {
+      return total + (domainValue > -3 ? (domainValue + 3) * 3 : 0);
+    }, 0);
+  };
+
+  const getSubDomainPointsSpent = (subDomainObj) => {
+    return Object.values(subDomainObj).reduce((total, statValue) => {
+      return total + getStatCost(statValue || -3);
+    }, 0);
+  };
 
   const updateDomain = (domainName, newValue) => {
     if (newValue < -3 || newValue > 10) return;
-    
     const newDomains = { ...domains, [domainName]: newValue };
-    const newDomainPointsSpent = Object.values(newDomains).reduce((total, statValue) => {
-      return total + getStatCost(statValue);
-    }, 0);
-    
-    if (newDomainPointsSpent <= 180) {
+    if (Object.values(newDomains).reduce((total, val) => total + getStatCost(val), 0) <= 180) {
       setData(prev => ({ ...prev, domains: newDomains }));
     }
   };
 
   const updateSubDomain = (subDomainName, newValue) => {
     if (newValue < -3 || newValue > 10) return;
-    
     const newSubDomains = { ...subDomains, [subDomainName]: newValue };
-    const newSubDomainPointsSpent = Object.values(newSubDomains).reduce((total, statValue) => {
-      return total + getStatCost(statValue || -3);
-    }, 0);
-    
-    if (newSubDomainPointsSpent <= availableSubDomainPoints) {
+    const availableSubDomainPoints = getAvailableSubDomainPoints();
+    const spentPoints = getSubDomainPointsSpent(newSubDomains);
+    if (spentPoints <= availableSubDomainPoints) {
       setData(prev => ({ ...prev, subDomains: newSubDomains }));
     }
   };
@@ -1630,7 +1618,6 @@ function NonCombatStatsStep({ data, setData, onNext, onBack }) {
     setData(prev => ({ ...prev, domains: resetDomains, subDomains: {} }));
   };
 
-  // Get stat modifier for display
   const getStatModifier = (value) => {
     if (value === -3) return -200;
     if (value === -2) return -100;
@@ -1639,11 +1626,13 @@ function NonCombatStatsStep({ data, setData, onNext, onBack }) {
     return value * 20;
   };
 
-  // Get training status
   const getTrainingStatus = (value) => {
-    if (value <= 0) return 'Untrained';
-    return 'Trained';
+    return value >= 1 ? 'Trained' : 'Untrained';
   };
+
+  const subDomainPointsSpent = getSubDomainPointsSpent(subDomains);
+  const availableSubDomainPoints = getAvailableSubDomainPoints();
+  const subDomainPointsRemaining = availableSubDomainPoints - subDomainPointsSpent;
 
   return (
     <div>
