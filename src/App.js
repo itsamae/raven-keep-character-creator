@@ -1561,10 +1561,6 @@ function NonCombatStatsStep({ data, setData, onNext, onBack }) {
     acting: 'Acting - Conveying genuine emotion and narrative through performance, embodying characters authentically, and passing yourself off genuinely as another person'
   };
 
-
-  const domainDefinitions = { /*... same as before ...*/ };
-  const subDomainNames = { /*... same as before ...*/ };
-
   const getStatCost = (targetValue) => {
     const costs = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13];
     let total = 0;
