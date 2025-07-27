@@ -349,7 +349,20 @@ function CombatStatsStep({ data, setData, onNext }) {
         else if (value === -2) initiative = -100;
         else if (value === -1) initiative = -50;
         else initiative = value * 20;
-        return `${turns} turn${turns > 1 ? 's' : ''} per round, ${initiative >= 0 ? '+' : ''}${initiative} initiative`;
+  
+        return (
+          <div>
+            <div style={{ marginBottom: '8px' }}>
+              <strong>Combat:</strong> {turns} turn{turns > 1 ? 's' : ''} per round, {initiative >= 0 ? '+' : ''}${initiative} initiative
+            </div>
+            <div style={{ fontSize: '12px', color: '#666', lineHeight: '1.3' }}>
+              <strong>Equipment Speed Penalties (turns only, not initiative):</strong><br/>
+              <strong>Armor:</strong> Light +0, Medium -1, Heavy -2, Ultra-Heavy -3<br/>
+              <strong>Weapons:</strong> Light +0, Medium -1, Heavy -2<br/>
+              <em>Example: Speed 7 + Heavy Armor (-2) = 5 effective speed = 2 turns/round</em>
+            </div>
+          </div>
+        );
       
       case 'endurance':
         let hp;
@@ -379,62 +392,53 @@ function CombatStatsStep({ data, setData, onNext }) {
         return `+${value * 20} bonus to healing rolls`;
       
       case 'recovery':
-  let startingAP, gainPerTurn;
+  let startingAP, gainPerRound;
   
   if (value === -3) {
-    startingAP = 0;
-    gainPerTurn = 0;
-  } else if (value === -2) {
     startingAP = 1;
-    gainPerTurn = 1;
-  } else if (value === -1) {
+    gainPerRound = 0;
+  } else if (value === -2) {
     startingAP = 2;
-    gainPerTurn = 1;
-  } else if (value === 0) {
+    gainPerRound = 0.5;
+  } else if (value === -1) {
     startingAP = 3;
-    gainPerTurn = 1;
-  } else if (value === 1) {
+    gainPerRound = 0.5;
+  } else if (value === 0) {
     startingAP = 4;
-    gainPerTurn = 1;
+    gainPerRound = 1;
+  } else if (value === 1) {
+    startingAP = 5;
+    gainPerRound = 1;
   } else if (value === 2) {
-    startingAP = 5;
-    gainPerTurn = 1;
-  } else if (value === 3) {
-    startingAP = 5;
-    gainPerTurn = 2;
-  } else if (value === 4) {
-    startingAP = 5;
-    gainPerTurn = 3;
-  } else if (value === 5) {
     startingAP = 6;
-    gainPerTurn = 3;
-  } else if (value === 6) {
+    gainPerRound = 1.5;
+  } else if (value === 3) {
     startingAP = 7;
-    gainPerTurn = 3;
-  } else if (value === 7) {
-    startingAP = 7;
-    gainPerTurn = 4;
-  } else if (value === 8) {
+    gainPerRound = 1.5;
+  } else if (value === 4) {
     startingAP = 8;
-    gainPerTurn = 4;
-  } else if (value === 9) {
+    gainPerRound = 2;
+  } else if (value === 5) {
     startingAP = 9;
-    gainPerTurn = 4;
+    gainPerRound = 2;
+  } else if (value === 6) {
+    startingAP = 10;
+    gainPerRound = 2.5;
+  } else if (value === 7) {
+    startingAP = 10;
+    gainPerRound = 2.5;
+  } else if (value === 8) {
+    startingAP = 10;
+    gainPerRound = 3;
+  } else if (value === 9) {
+    startingAP = 10;
+    gainPerRound = 3.5;
   } else if (value === 10) {
     startingAP = 10;
-    gainPerTurn = 4;
+    gainPerRound = 4;
   }
   
-  if (value === -3) {
-    return "No AP - cannot use spells, skills, or consumables";
-  } else {
-    return `Start with ${startingAP} AP, recover ${gainPerTurn} AP per turn`;
-  }
-      
-      default:
-        return "";
-    }
-  };
+  return `Start with ${startingAP} AP, gain ${gainPerRound} AP per round (10 AP cap)`;
 
   const statDescriptions = {
     strength: "Increases damage with STR-based weapons",
