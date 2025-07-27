@@ -1560,9 +1560,7 @@ function NonCombatStatsStep({ data, setData, onNext, onBack }) {
     dancing: 'Dancing - Expressing emotion, culture, or storytelling through rhythmic body movement, gesture, and choreography',
     acting: 'Acting - Conveying genuine emotion and narrative through performance, embodying characters authentically, and passing yourself off genuinely as another person'
   };
-
-  // Step 4: Non-Combat Stats 
-function NonCombatStatsStep({ data, setData, onNext, onBack }) {
+  
   const domains = data.domains || {
     wisdom: -3,
     intelligence: -3,
