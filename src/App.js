@@ -1397,7 +1397,542 @@ function ReputationStep({ data, setData, onNext, onBack }) {
    </div>
  );
 } 
+// Step 4: Non-Combat Stats 
+function NonCombatStatsStep({ data, setData, onNext, onBack }) {
+  // Initialize non-combat stats if they don't exist
+  const domains = data.domains || {
+    wisdom: -3,
+    intelligence: -3,
+    deftness: -3,
+    charisma: -3,
+    instinct: -3,
+    empathy: -3
+  };
 
+  const subDomains = data.subDomains || {};
+
+  const domainDefinitions = {
+    wisdom: {
+      name: 'Wisdom',
+      description: 'The Mindful Path',
+      subDomains: [
+        'perception', 'insight', 'navigation', 'survival', 'diagnosis', 
+        'treatment', 'herbalism', 'religion', 'natureLore', 'cooking', 'brewing'
+      ]
+    },
+    intelligence: {
+      name: 'Intelligence', 
+      description: 'The Scholar\'s Mind',
+      subDomains: [
+        'history', 'culturalKnowledge', 'academics', 'tactics', 'engineering',
+        'magitek', 'arcana', 'investigation', 'alchemy', 'astrology',
+        'cartography', 'linguistics', 'economics', 'law', 'cryptography', 'appraisal'
+      ]
+    },
+    deftness: {
+      name: 'Deftness',
+      description: 'The Agile Body', 
+      subDomains: [
+        'stealth', 'legerdemain', 'security', 'forgery', 'acrobatics',
+        'escapeArtist', 'precisionCrafts', 'weaving', 'leatherworking',
+        'goldsmithing', 'carpentry', 'climbing', 'gemCrafting'
+      ]
+    },
+    charisma: {
+      name: 'Charisma',
+      description: 'The Social Grace',
+      subDomains: [
+        'persuasion', 'intimidation', 'deception', 'performance', 'leadership',
+        'diplomacy', 'seduction', 'streetwise', 'gambling', 'instruction',
+        'propaganda', 'commerce'
+      ]
+    },
+    instinct: {
+      name: 'Instinct',
+      description: 'The Primal Core',
+      subDomains: [
+        'reflexes', 'athletics', 'brawling', 'animalHandling', 'husbandry',
+        'tracking', 'mining', 'blacksmithing', 'fishing', 'botany',
+        'aethericSense', 'dangerSense', 'scavenging', 'improvisation'
+      ]
+    },
+    empathy: {
+      name: 'Empathy',
+      description: 'The Heart\'s Understanding',
+      subDomains: [
+        'comforting', 'mediation', 'counseling', 'emotionalInsight', 'culturalAwareness',
+        'communityBuilding', 'painting', 'drawing', 'sculpting', 'tattooing',
+        'calligraphy', 'pottery', 'dancing', 'acting'
+      ]
+    }
+  };
+
+  const subDomainNames = {
+    // Wisdom
+    perception: 'Perception - Spotting hidden objects, noticing details, awareness',
+    insight: 'Insight - Reading people, detecting lies, understanding motivations',
+    navigation: 'Navigation - Maps, directions, pathfinding, not getting lost',
+    survival: 'Survival - Wilderness skills, foraging, weather prediction',
+    diagnosis: 'Diagnosis - Identifying diseases, poisons, injuries, medical assessment',
+    treatment: 'Treatment - Surgery, first aid, healing techniques, bedside manner',
+    herbalism: 'Herbalism - Natural remedies, medicinal plants, poultices',
+    religion: 'Religion - Theology, rituals, prayer, divine knowledge',
+    natureLore: 'Nature Lore - Flora/fauna identification, ecosystems, animal behavior',
+    cooking: 'Cooking - Meal preparation, recipe knowledge, taste',
+    brewing: 'Brewing - Alcohol creation, fermentation, distilling',
+
+    // Intelligence  
+    history: 'History - Past events, historical figures, ancient civilizations',
+    culturalKnowledge: 'Cultural Knowledge - Academic understanding of customs, traditions, beliefs',
+    academics: 'Academics - Mathematics, literature, philosophy, general education',
+    tactics: 'Tactics - Battle strategy, troop movements, war theory',
+    engineering: 'Engineering - Mechanical design, structural analysis, physics',
+    magitek: 'Magitek - Allagan technology, device operation, tech repair',
+    arcana: 'Arcana - Magical theory, aether manipulation, spell analysis',
+    investigation: 'Investigation - Research, deduction, clue analysis',
+    alchemy: 'Alchemy - Potion brewing, transmutation, chemistry',
+    astrology: 'Astrology - Star navigation, fortune telling, celestial events',
+    cartography: 'Cartography - Map-making, geography, terrain analysis',
+    linguistics: 'Linguistics - Languages, codes, translation, etymology',
+    economics: 'Economics - Markets, trade, supply/demand, accounting',
+    law: 'Law - Legal systems, contracts, jurisprudence',
+    cryptography: 'Cryptography - Encryption, codebreaking, secret communication',
+    appraisal: 'Appraisal - Evaluating worth and properties of items',
+
+    // Deftness
+    stealth: 'Stealth - Sneaking, hiding, moving silently',
+    legerdemain: 'Legerdemain - Pickpocketing, sleight of hand, stage magic',
+    security: 'Security - Lockpicking, trap detection/disarmament',
+    forgery: 'Forgery - Document creation, handwriting mimicry',
+    acrobatics: 'Acrobatics - Tumbling, balance, contortion, parkour',
+    escapeArtist: 'Escape Artist - Bonds, restraints, tight spaces',
+    precisionCrafts: 'Precision Crafts - Fine detail work, steady hands, delicate assembly',
+    weaving: 'Weaving - Cloth creation, tailoring, embroidery',
+    leatherworking: 'Leatherworking - Hide preparation, armor crafting',
+    goldsmithing: 'Goldsmithing - Jewelry, fine metalwork, gem cutting',
+    carpentry: 'Carpentry - Woodworking, furniture, construction',
+    climbing: 'Climbing - Scaling surfaces, rappelling, mountaineering',
+    gemCrafting: 'Gem Crafting - Creating gems that can enhance spells and abilities',
+
+    // Charisma
+    persuasion: 'Persuasion - Logical arguments, emotional appeals',
+    intimidation: 'Intimidation - Threats, fear tactics, commanding presence',
+    deception: 'Deception - Lies, disguises, false identities',
+    performance: 'Performance - Getting people\'s attention and maintaining it',
+    leadership: 'Leadership - Command, inspiration, morale building',
+    diplomacy: 'Diplomacy - Negotiation, etiquette, political maneuvering',
+    seduction: 'Seduction - Charm, romance, reading desires',
+    streetwise: 'Streetwise - Criminal contacts, black markets, gangs',
+    gambling: 'Gambling - Games of chance, reading tells, probability',
+    instruction: 'Instruction - Teaching, mentoring, clear communication',
+    propaganda: 'Propaganda - Public opinion, rumors, information warfare',
+    commerce: 'Commerce - Sales, customer service, market presence',
+
+    // Instinct
+    reflexes: 'Reflexes - Reaction time, quick movements',
+    athletics: 'Athletics - Running, jumping, swimming, endurance',
+    brawling: 'Brawling - Unarmed combat, grappling, street fighting',
+    animalHandling: 'Animal Handling - Taming, training, riding, calming animals',
+    husbandry: 'Husbandry - Breeding, raising, caring for domestic animals',
+    tracking: 'Tracking - Following trails, reading signs, hunting',
+    mining: 'Mining - Ore extraction, tunnel safety, explosives',
+    blacksmithing: 'Blacksmithing - Metal forging, tool creation, tempering',
+    fishing: 'Fishing - Angling, net work, marine knowledge',
+    botany: 'Botany - Plant gathering, cultivation, growth cycles',
+    aethericSense: 'Aetheric Sense - Ley line detection, crystal attunement',
+    dangerSense: 'Danger Sense - Intuition, gut feelings, sixth sense',
+    scavenging: 'Scavenging - Finding useful materials in any environment',
+    improvisation: 'Improvisation - Crafting makeshift items and solutions',
+
+    // Empathy
+    comforting: 'Comforting - Providing genuine emotional support',
+    mediation: 'Mediation - Resolving conflicts, finding middle ground',
+    counseling: 'Counseling - Long-term emotional guidance, therapy',
+    emotionalInsight: 'Emotional Insight - Understanding deep motivations and trauma',
+    culturalAwareness: 'Cultural Awareness - Reading social cues, adapting to local customs',
+    communityBuilding: 'Community Building - Fostering group cohesion and belonging',
+    painting: 'Painting - Creating images with paints, inks, brushes, pigment',
+    drawing: 'Drawing - Sketching, charcoal art, pencil and ink illustrations',
+    sculpting: 'Sculpting - Carving and shaping wood, stone, clay, and metal',
+    tattooing: 'Tattooing - Designing and applying body art, symbolic markings, tribal or magical tattoos',
+    calligraphy: 'Calligraphy - Elegant handwriting, decorative script',
+    pottery: 'Pottery - Crafting ceramics, clay vessels, fine dishware',
+    dancing: 'Dancing - Expressing emotion, culture, or storytelling through rhythmic body movement, gesture, and choreography',
+    acting: 'Acting - Conveying genuine emotion and narrative through performance, embodying characters authentically, and passing yourself off genuinely as another person'
+  };
+
+  // Calculate point costs (same as combat stats)
+  const getStatCost = (targetValue) => {
+    const costs = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13];
+    let total = 0;
+    for (let i = 0; i < targetValue + 3; i++) {
+      total += costs[i];
+    }
+    return total;
+  };
+
+  // Calculate total points spent on domains
+  const domainPointsSpent = Object.values(domains).reduce((total, statValue) => {
+    return total + getStatCost(statValue);
+  }, 0);
+
+  // Calculate total points spent on sub-domains
+  const subDomainPointsSpent = Object.values(subDomains).reduce((total, statValue) => {
+    return total + getStatCost(statValue || -3);
+  }, 0);
+
+  // Calculate available sub-domain points from domains
+  const availableSubDomainPoints = Object.values(domains).reduce((total, domainValue) => {
+    if (domainValue > -3) {
+      return total + ((domainValue + 3) * 3); // 3 sub-points per domain point above -3
+    }
+    return total;
+  }, 0);
+
+  const domainPointsRemaining = 180 - domainPointsSpent;
+  const subDomainPointsRemaining = availableSubDomainPoints - subDomainPointsSpent;
+
+  const updateDomain = (domainName, newValue) => {
+    if (newValue < -3 || newValue > 10) return;
+    
+    const newDomains = { ...domains, [domainName]: newValue };
+    const newDomainPointsSpent = Object.values(newDomains).reduce((total, statValue) => {
+      return total + getStatCost(statValue);
+    }, 0);
+    
+    if (newDomainPointsSpent <= 180) {
+      setData(prev => ({ ...prev, domains: newDomains }));
+    }
+  };
+
+  const updateSubDomain = (subDomainName, newValue) => {
+    if (newValue < -3 || newValue > 10) return;
+    
+    const newSubDomains = { ...subDomains, [subDomainName]: newValue };
+    const newSubDomainPointsSpent = Object.values(newSubDomains).reduce((total, statValue) => {
+      return total + getStatCost(statValue || -3);
+    }, 0);
+    
+    if (newSubDomainPointsSpent <= availableSubDomainPoints) {
+      setData(prev => ({ ...prev, subDomains: newSubDomains }));
+    }
+  };
+
+  const resetStats = () => {
+    const resetDomains = {
+      wisdom: -3,
+      intelligence: -3,
+      deftness: -3,
+      charisma: -3,
+      instinct: -3,
+      empathy: -3
+    };
+    setData(prev => ({ ...prev, domains: resetDomains, subDomains: {} }));
+  };
+
+  // Get stat modifier for display
+  const getStatModifier = (value) => {
+    if (value === -3) return -200;
+    if (value === -2) return -100;
+    if (value === -1) return -50;
+    if (value === 0) return 0;
+    return value * 20;
+  };
+
+  // Get training status
+  const getTrainingStatus = (value) => {
+    if (value <= 0) return 'Untrained';
+    return 'Trained';
+  };
+
+  return (
+    <div>
+      <h2>Non-Combat Stats Allocation</h2>
+      <p>Allocate your 180 domain points across 6 domains. Each domain point grants 3 sub-domain points to distribute within that domain's specializations.</p>
+      
+      {/* Skill Check Rules */}
+      <details style={{ marginBottom: '30px' }}>
+        <summary style={{ 
+          cursor: 'pointer', 
+          padding: '10px', 
+          backgroundColor: '#f8f9fa', 
+          border: '1px solid #ddd', 
+          borderRadius: '5px',
+          fontWeight: 'bold'
+        }}>
+          Skill Check Rules (Click to expand)
+        </summary>
+        <div style={{ marginTop: '15px', padding: '15px', backgroundColor: '#fff', border: '1px solid #ddd', borderRadius: '5px' }}>
+          <h4>Basic Roll:</h4>
+          <p><strong>d1000 + sub-domain bonus</strong></p>
+          
+          <h4>Trained vs Untrained:</h4>
+          <ul>
+            <li><strong>Trained (1+ in sub-domain):</strong> Full bonus, normal critical ranges</li>
+            <li><strong>Untrained (0 or negative):</strong> Use domain bonus -150, quadruple critical fail range, no critical successes</li>
+            <li><strong>Completely Unfamiliar (-3 in both):</strong> Cannot attempt above DC 400</li>
+          </ul>
+          
+          <h4>Critical Ranges:</h4>
+          <ul>
+            <li><strong>Critical Success:</strong> Natural 950+</li>
+            <li><strong>Critical Fail:</strong> Natural 50 or less</li>
+            <li><strong>Untrained quadruples fail range:</strong> 200 or less</li>
+          </ul>
+          
+          <h4>Difficulty Classes:</h4>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px', marginTop: '10px' }}>
+            <div>Trivial: 200</div>
+            <div>Easy: 400</div>
+            <div>Moderate: 600</div>
+            <div>Hard: 800</div>
+            <div>Extreme: 1000</div>
+            <div>Legendary: 1200</div>
+            <div>Impossible: 1400+</div>
+          </div>
+        </div>
+      </details>
+
+      {/* Points Summary */}
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center',
+        marginBottom: '20px', 
+        padding: '15px', 
+        backgroundColor: '#f8f9fa', 
+        border: '1px solid #ddd', 
+        borderRadius: '5px' 
+      }}>
+        <div>
+          <strong>Domain Points:</strong> {domainPointsSpent} / 180 
+          <span style={{ color: '#666', marginLeft: '10px' }}>({domainPointsRemaining} remaining)</span>
+          <br />
+          <strong>Sub-Domain Points:</strong> {subDomainPointsSpent} / {availableSubDomainPoints}
+          <span style={{ color: '#666', marginLeft: '10px' }}>({subDomainPointsRemaining} remaining)</span>
+        </div>
+        <button 
+          onClick={resetStats}
+          style={{ 
+            padding: '8px 16px', 
+            fontSize: '14px',
+            backgroundColor: '#6c757d',
+            color: 'white',
+            border: 'none',
+            borderRadius: '5px',
+            cursor: 'pointer'
+          }}
+        >
+          Reset All Stats
+        </button>
+      </div>
+
+      {/* Domain and Sub-Domain Allocation */}
+      {Object.entries(domainDefinitions).map(([domainKey, domain]) => {
+        const domainValue = domains[domainKey];
+        const domainModifier = getStatModifier(domainValue);
+        
+        return (
+          <div key={domainKey} style={{ 
+            marginBottom: '30px', 
+            border: '2px solid #ddd', 
+            borderRadius: '5px',
+            backgroundColor: 'white'
+          }}>
+            {/* Domain Header */}
+            <div style={{ 
+              padding: '15px', 
+              backgroundColor: '#f8f9fa',
+              borderBottom: '1px solid #ddd'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div>
+                  <h3 style={{ margin: '0', color: '#333' }}>{domain.name}</h3>
+                  <p style={{ margin: '5px 0', fontSize: '14px', color: '#666', fontStyle: 'italic' }}>
+                    {domain.description}
+                  </p>
+                  <div style={{ fontSize: '14px', color: '#555' }}>
+                    <strong>Modifier:</strong> {domainModifier >= 0 ? '+' : ''}{domainModifier} | 
+                    <strong> Available Sub-Points:</strong> {domainValue > -3 ? (domainValue + 3) * 3 : 0}
+                  </div>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <button 
+                    onClick={() => updateDomain(domainKey, domainValue - 1)}
+                    disabled={domainValue <= -3}
+                    style={{ 
+                      padding: '5px 10px', 
+                      fontSize: '16px',
+                      backgroundColor: domainValue > -3 ? '#dc3545' : '#ccc',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '3px',
+                      cursor: domainValue > -3 ? 'pointer' : 'not-allowed'
+                    }}
+                  >
+                    -
+                  </button>
+                  <span style={{ 
+                    minWidth: '40px', 
+                    textAlign: 'center', 
+                    fontSize: '18px', 
+                    fontWeight: 'bold',
+                    padding: '5px 10px',
+                    backgroundColor: '#fff',
+                    border: '1px solid #ddd',
+                    borderRadius: '3px'
+                  }}>
+                    {domainValue}
+                  </span>
+                  <button 
+                    onClick={() => updateDomain(domainKey, domainValue + 1)}
+                    disabled={domainValue >= 10 || domainPointsRemaining <= 0}
+                    style={{ 
+                      padding: '5px 10px', 
+                      fontSize: '16px',
+                      backgroundColor: (domainValue < 10 && domainPointsRemaining > 0) ? '#28a745' : '#ccc',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '3px',
+                      cursor: (domainValue < 10 && domainPointsRemaining > 0) ? 'pointer' : 'not-allowed'
+                    }}
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
+              <div style={{ fontSize: '12px', color: '#888', marginTop: '5px' }}>
+                Domain Cost: {getStatCost(domainValue)} points
+              </div>
+            </div>
+
+            {/* Sub-Domains */}
+            {domainValue > -3 && (
+              <div style={{ padding: '15px' }}>
+                <h4 style={{ margin: '0 0 15px 0', color: '#555' }}>Sub-Domain Specializations</h4>
+                <div style={{ display: 'grid', gap: '10px' }}>
+                  {domain.subDomains.map(subDomainKey => {
+                    const subDomainValue = subDomains[subDomainKey] || -3;
+                    const subDomainModifier = getStatModifier(subDomainValue);
+                    const trainingStatus = getTrainingStatus(subDomainValue);
+                    
+                    return (
+                      <div key={subDomainKey} style={{ 
+                        padding: '10px', 
+                        border: '1px solid #eee', 
+                        borderRadius: '3px',
+                        backgroundColor: '#fafafa'
+                      }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <div style={{ flex: 1 }}>
+                            <div style={{ fontSize: '14px', fontWeight: 'bold' }}>
+                              {subDomainNames[subDomainKey]}
+                            </div>
+                            <div style={{ fontSize: '12px', color: '#666' }}>
+                              <strong>Modifier:</strong> {subDomainModifier >= 0 ? '+' : ''}{subDomainModifier} | 
+                              <strong> Status:</strong> <span style={{ color: trainingStatus === 'Trained' ? '#28a745' : '#dc3545' }}>
+                                {trainingStatus}
+                              </span>
+                            </div>
+                          </div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            <button 
+                              onClick={() => updateSubDomain(subDomainKey, subDomainValue - 1)}
+                              disabled={subDomainValue <= -3}
+                              style={{ 
+                                padding: '3px 8px', 
+                                fontSize: '14px',
+                                backgroundColor: subDomainValue > -3 ? '#dc3545' : '#ccc',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '3px',
+                                cursor: subDomainValue > -3 ? 'pointer' : 'not-allowed'
+                              }}
+                            >
+                              -
+                            </button>
+                            <span style={{ 
+                              minWidth: '30px', 
+                              textAlign: 'center', 
+                              fontSize: '14px', 
+                              fontWeight: 'bold',
+                              padding: '3px 6px',
+                              backgroundColor: '#fff',
+                              border: '1px solid #ddd',
+                              borderRadius: '3px'
+                            }}>
+                              {subDomainValue}
+                            </span>
+                            <button 
+                              onClick={() => updateSubDomain(subDomainKey, subDomainValue + 1)}
+                              disabled={subDomainValue >= 10 || subDomainPointsRemaining <= 0}
+                              style={{ 
+                                padding: '3px 8px', 
+                                fontSize: '14px',
+                                backgroundColor: (subDomainValue < 10 && subDomainPointsRemaining > 0) ? '#28a745' : '#ccc',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '3px',
+                                cursor: (subDomainValue < 10 && subDomainPointsRemaining > 0) ? 'pointer' : 'not-allowed'
+                              }}
+                            >
+                              +
+                            </button>
+                          </div>
+                        </div>
+                        <div style={{ fontSize: '11px', color: '#888', marginTop: '3px' }}>
+                          Cost: {getStatCost(subDomainValue)} sub-points
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      })}
+
+      <div style={{ display: 'flex', gap: '10px' }}>
+        <button 
+          onClick={onBack}
+          style={{ 
+            padding: '12px 24px', 
+            fontSize: '16px',
+            backgroundColor: '#6c757d',
+            color: 'white',
+            border: 'none',
+            borderRadius: '5px',
+            cursor: 'pointer'
+          }}
+        >
+          ← Back to Reputation
+        </button>
+        
+        <button 
+          onClick={onNext}
+          style={{ 
+            padding: '12px 24px', 
+            fontSize: '16px',
+            backgroundColor: '#007bff',
+            color: 'white',
+            border: 'none',
+            borderRadius: '5px',
+            cursor: 'pointer'
+          }}
+        >
+          Continue to Backgrounds
+        </button>
+        
+        {domainPointsRemaining > 0 && (
+          <p style={{ color: '#28a745', marginTop: '10px', marginLeft: '10px' }}>
+            💡 You have {domainPointsRemaining} domain points remaining.
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
 
 
 export default App;
