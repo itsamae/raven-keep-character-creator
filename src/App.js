@@ -1586,27 +1586,28 @@ function NonCombatStatsStep({ data, setData, onNext, onBack }) {
     return total + getStatCost(statValue);
   }, 0);
 
-  // Calculate total points spent on sub-domains - only count values above -3
-  const subDomainPointsSpent = Object.entries(domainDefinitions).reduce((total, [domainKey, domain]) => {
-    return domain.subDomains.reduce((subTotal, subDomainKey) => {
+  // Calculate points spent per domain on sub-domains
+  const getSubDomainPointsForDomain = (domainKey) => {
+    const domain = domainDefinitions[domainKey];
+    return domain.subDomains.reduce((total, subDomainKey) => {
       const value = subDomains[subDomainKey] || -3;
       if (value > -3) {
-        return subTotal + getStatCost(value);
+        return total + getStatCost(value);
       }
-      return subTotal;
-    }, total);
-  }, 0);
+      return total;
+    }, 0);
+  };
 
-  // Calculate available sub-domain points from domains
-  const availableSubDomainPoints = Object.values(domains).reduce((total, domainValue) => {
+  // Calculate available sub-domain points per domain
+  const getAvailableSubDomainPoints = (domainKey) => {
+    const domainValue = domains[domainKey];
     if (domainValue > -3) {
-      return total + ((domainValue + 3) * 3); // 3 sub-points per domain point above -3
+      return (domainValue + 3) * 3;
     }
-    return total;
-  }, 0);
+    return 0;
+  };
 
   const domainPointsRemaining = 180 - domainPointsSpent;
-  const subDomainPointsRemaining = availableSubDomainPoints - subDomainPointsSpent;
 
   const updateDomain = (domainName, newValue) => {
     if (newValue < -3 || newValue > 10) return;
@@ -1621,7 +1622,7 @@ function NonCombatStatsStep({ data, setData, onNext, onBack }) {
     }
   };
 
-  const updateSubDomain = (subDomainName, newValue) => {
+  const updateSubDomain = (domainKey, subDomainName, newValue) => {
     if (newValue < -3 || newValue > 10) return;
     
     // Create new sub-domains object with the updated value
@@ -1633,18 +1634,19 @@ function NonCombatStatsStep({ data, setData, onNext, onBack }) {
       newSubDomains[subDomainName] = newValue;
     }
     
-    // Calculate new sub-domain points spent - using the same method as initial calculation
-    const newSubDomainPointsSpent = Object.entries(domainDefinitions).reduce((total, [domainKey, domain]) => {
-      return domain.subDomains.reduce((subTotal, subDKey) => {
-        const value = newSubDomains[subDKey] || -3;
-        if (value > -3) {
-          return subTotal + getStatCost(value);
-        }
-        return subTotal;
-      }, total);
+    // Calculate points spent for this specific domain
+    const domainSubDomains = domainDefinitions[domainKey].subDomains;
+    const newDomainSubPointsSpent = domainSubDomains.reduce((total, subDKey) => {
+      const value = newSubDomains[subDKey] || -3;
+      if (value > -3) {
+        return total + getStatCost(value);
+      }
+      return total;
     }, 0);
     
-    if (newSubDomainPointsSpent <= availableSubDomainPoints) {
+    const availableForDomain = getAvailableSubDomainPoints(domainKey);
+    
+    if (newDomainSubPointsSpent <= availableForDomain) {
       setData(prev => ({ ...prev, subDomains: newSubDomains }));
     }
   };
@@ -1675,6 +1677,19 @@ function NonCombatStatsStep({ data, setData, onNext, onBack }) {
     if (value <= 0) return 'Untrained';
     return 'Trained';
   };
+
+  // Calculate total sub-domain points spent across all domains (for display)
+  const totalSubDomainPointsSpent = Object.entries(domainDefinitions).reduce((total, [domainKey]) => {
+    return total + getSubDomainPointsForDomain(domainKey);
+  }, 0);
+
+  // Calculate total available sub-domain points across all domains (for display)
+  const totalAvailableSubDomainPoints = Object.entries(domains).reduce((total, [domainKey, domainValue]) => {
+    if (domainValue > -3) {
+      return total + ((domainValue + 3) * 3);
+    }
+    return total;
+  }, 0);
 
   return (
     <div>
@@ -1739,8 +1754,8 @@ function NonCombatStatsStep({ data, setData, onNext, onBack }) {
           <strong>Domain Points:</strong> {domainPointsSpent} / 180 
           <span style={{ color: '#666', marginLeft: '10px' }}>({domainPointsRemaining} remaining)</span>
           <br />
-          <strong>Sub-Domain Points:</strong> {subDomainPointsSpent} / {availableSubDomainPoints}
-          <span style={{ color: '#666', marginLeft: '10px' }}>({subDomainPointsRemaining} remaining)</span>
+          <strong>Total Sub-Domain Points:</strong> {totalSubDomainPointsSpent} / {totalAvailableSubDomainPoints}
+          <span style={{ color: '#666', marginLeft: '10px' }}>({totalAvailableSubDomainPoints - totalSubDomainPointsSpent} remaining)</span>
         </div>
         <button 
           onClick={resetStats}
@@ -1762,6 +1777,9 @@ function NonCombatStatsStep({ data, setData, onNext, onBack }) {
       {Object.entries(domainDefinitions).map(([domainKey, domain]) => {
         const domainValue = domains[domainKey];
         const domainModifier = getStatModifier(domainValue);
+        const availableSubPoints = getAvailableSubDomainPoints(domainKey);
+        const spentSubPoints = getSubDomainPointsForDomain(domainKey);
+        const remainingSubPoints = availableSubPoints - spentSubPoints;
         
         return (
           <div key={domainKey} style={{ 
@@ -1784,7 +1802,8 @@ function NonCombatStatsStep({ data, setData, onNext, onBack }) {
                   </p>
                   <div style={{ fontSize: '14px', color: '#555' }}>
                     <strong>Modifier:</strong> {domainModifier >= 0 ? '+' : ''}{domainModifier} | 
-                    <strong> Available Sub-Points:</strong> {domainValue > -3 ? (domainValue + 3) * 3 : 0}
+                    <strong> Sub-Points:</strong> {spentSubPoints} / {availableSubPoints} 
+                    <span style={{ color: '#666' }}> ({remainingSubPoints} remaining)</span>
                   </div>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -1869,7 +1888,7 @@ function NonCombatStatsStep({ data, setData, onNext, onBack }) {
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                           <button 
-                            onClick={() => updateSubDomain(subDomainKey, subDomainValue - 1)}
+                            onClick={() => updateSubDomain(domainKey, subDomainKey, subDomainValue - 1)}
                             disabled={subDomainValue <= -3 || isDisabled}
                             style={{ 
                               padding: '3px 8px', 
@@ -1896,20 +1915,16 @@ function NonCombatStatsStep({ data, setData, onNext, onBack }) {
                             {subDomainValue}
                           </span>
                           <button 
-                            onClick={() => {
-                              if (!isDisabled && subDomainValue < 10 && subDomainPointsRemaining > 0) {
-                                updateSubDomain(subDomainKey, subDomainValue + 1);
-                              }
-                            }}
-                            disabled={subDomainValue >= 10 || subDomainPointsRemaining <= 0 || isDisabled}
+                            onClick={() => updateSubDomain(domainKey, subDomainKey, subDomainValue + 1)}
+                            disabled={subDomainValue >= 10 || remainingSubPoints <= 0 || isDisabled}
                             style={{ 
                               padding: '3px 8px', 
                               fontSize: '14px',
-                              backgroundColor: (subDomainValue < 10 && subDomainPointsRemaining > 0 && !isDisabled) ? '#28a745' : '#ccc',
+                              backgroundColor: (subDomainValue < 10 && remainingSubPoints > 0 && !isDisabled) ? '#28a745' : '#ccc',
                               color: 'white',
                               border: 'none',
                               borderRadius: '3px',
-                              cursor: (subDomainValue < 10 && subDomainPointsRemaining > 0 && !isDisabled) ? 'pointer' : 'not-allowed'
+                              cursor: (subDomainValue < 10 && remainingSubPoints > 0 && !isDisabled) ? 'pointer' : 'not-allowed'
                             }}
                           >
                             +
