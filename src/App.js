@@ -1561,13 +1561,38 @@ function NonCombatStatsStep({ data, setData, onNext, onBack }) {
     acting: 'Acting - Conveying genuine emotion and narrative through performance, embodying characters authentically, and passing yourself off genuinely as another person'
   };
 
-   const getStatCost = (targetValue) => {
+  // Step 4: Non-Combat Stats 
+function NonCombatStatsStep({ data, setData, onNext, onBack }) {
+  const domains = data.domains || {
+    wisdom: -3,
+    intelligence: -3,
+    deftness: -3,
+    charisma: -3,
+    instinct: -3,
+    empathy: -3
+  };
+
+  const subDomains = data.subDomains || {};
+
+  const domainDefinitions = { /*... same as before ...*/ };
+  const subDomainNames = { /*... same as before ...*/ };
+
+  const getStatCost = (targetValue) => {
     const costs = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13];
     let total = 0;
     for (let i = 0; i < targetValue + 3; i++) {
       total += costs[i];
     }
     return total;
+  };
+
+  const getPointCostDelta = (from, to) => {
+    const cost = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13];
+    let delta = 0;
+    for (let i = from + 3; i < to + 3; i++) {
+      delta += cost[i];
+    }
+    return delta;
   };
 
   const domainPointsSpent = Object.values(domains).reduce((total, statValue) => {
@@ -1584,7 +1609,7 @@ function NonCombatStatsStep({ data, setData, onNext, onBack }) {
 
   const getSubDomainPointsSpent = (subDomainObj) => {
     return Object.values(subDomainObj).reduce((total, statValue) => {
-      return total + getStatCost(statValue || -3);
+      return total + getStatCost(statValue ?? -3);
     }, 0);
   };
 
@@ -1596,39 +1621,20 @@ function NonCombatStatsStep({ data, setData, onNext, onBack }) {
     }
   };
 
-    const getPointCostDelta = (from, to) => {
-  const cost = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13];
-  let delta = 0;
-  for (let i = from + 3; i < to + 3; i++) {
-    delta += cost[i];
-  }
-  return delta;
-};
-
-
   const updateSubDomain = (subDomainName, newValue) => {
-  const clampedValue = Math.max(-3, Math.min(10, newValue));
-  const currentValue = subDomains[subDomainName] ?? -3;
-  if (clampedValue === currentValue) return;
+    const clampedValue = Math.max(-3, Math.min(10, newValue));
+    const currentValue = subDomains[subDomainName] ?? -3;
+    if (clampedValue === currentValue) return;
 
-  const deltaCost = getPointCostDelta(currentValue, clampedValue);
-  const currentSpent = getSubDomainPointsSpent(subDomains);
-  const available = getAvailableSubDomainPoints();
+    const deltaCost = getPointCostDelta(currentValue, clampedValue);
+    const available = getAvailableSubDomainPoints();
+    const spent = getSubDomainPointsSpent(subDomains);
 
-  if (currentSpent + deltaCost <= available) {
-    const newSubDomains = { ...subDomains, [subDomainName]: clampedValue };
-    setData(prev => ({ ...prev, subDomains: newSubDomains }));
-  }
-};
-
-  const availableSubDomainPoints = getAvailableSubDomainPoints();
-
-  if (currentTotal + delta <= availableSubDomainPoints) {
-    const newSubDomains = { ...subDomains, [subDomainName]: clampedValue };
-    setData(prev => ({ ...prev, subDomains: newSubDomains }));
-  }
-};
-
+    if (spent + deltaCost <= available) {
+      const newSubDomains = { ...subDomains, [subDomainName]: clampedValue };
+      setData(prev => ({ ...prev, subDomains: newSubDomains }));
+    }
+  };
 
   const resetStats = () => {
     const resetDomains = {
