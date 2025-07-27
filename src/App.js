@@ -59,14 +59,15 @@ function App() {
         {currentStep === 8 && " Character Overview"}
       </div>
       
+
       {currentStep === 1 && <WelcomeStep onNext={() => setCurrentStep(2)} />}
-      {currentStep === 2 && <CharacterBasicsStep data={characterData} setData={setCharacterData} onNext={() => setCurrentStep(3)} />}
-      {currentStep === 3 && <ReputationStep data={characterData} setData={setCharacterData} onNext={() => setCurrentStep(4)} />}
-      {currentStep === 4 && <NonCombatStatsStep data={characterData} setData={setCharacterData} onNext={() => setCurrentStep(5)} />}
-      {currentStep === 5 && <BackgroundsStep data={characterData} setData={setCharacterData} onNext={() => setCurrentStep(6)} />}
-      {currentStep === 6 && <LifestylesStep data={characterData} setData={setCharacterData} onNext={() => setCurrentStep(7)} />}
-      {currentStep === 7 && <CombatStatsStep data={characterData} setData={setCharacterData} onNext={() => setCurrentStep(8)} />}
-      {currentStep === 8 && <CharacterOverviewStep data={characterData} />}
+      {currentStep === 2 && <CharacterBasicsStep data={characterData} setData={setCharacterData} onNext={() => setCurrentStep(3)} onBack={() => setCurrentStep(1)} />}
+      {currentStep === 3 && <ReputationStep data={characterData} setData={setCharacterData} onNext={() => setCurrentStep(4)} onBack={() => setCurrentStep(2)} />}
+      {currentStep === 4 && <NonCombatStatsStep data={characterData} setData={setCharacterData} onNext={() => setCurrentStep(5)} onBack={() => setCurrentStep(3)} />}
+      {currentStep === 5 && <BackgroundsStep data={characterData} setData={setCharacterData} onNext={() => setCurrentStep(6)} onBack={() => setCurrentStep(4)} />}
+      {currentStep === 6 && <LifestylesStep data={characterData} setData={setCharacterData} onNext={() => setCurrentStep(7)} onBack={() => setCurrentStep(5)} />}
+      {currentStep === 7 && <CombatStatsStep data={characterData} setData={setCharacterData} onNext={() => setCurrentStep(8)} onBack={() => setCurrentStep(6)} />}
+      {currentStep === 8 && <CharacterOverviewStep data={characterData} onBack={() => setCurrentStep(7)} />}
     </div>
   );
 }
@@ -137,8 +138,8 @@ function WelcomeStep({ onNext }) {
   );
 }
 
-// Step 2: Character Basics
-function CharacterBasicsStep({ data, setData, onNext }) {
+// Step 2: Character Basics (UPDATED)
+function CharacterBasicsStep({ data, setData, onNext, onBack }) {
   const origins = [
     'Ala Mhigo', 'Azim Steppe', 'Bozja', 'Dalmasca', 'Doma', 'Dravania',
     'Garlemald & Imperial Territories', 'Gelmorra (pre-Gridanian subterranean)',
@@ -167,76 +168,109 @@ function CharacterBasicsStep({ data, setData, onNext }) {
     ]
   };
 
+  const departments = [
+    {
+      id: 'aetheric',
+      name: 'Aetheric Studies',
+      shortDesc: 'Magic, theory, and aetheric research',
+      fullDesc: 'Delve into the mysteries of aether and magic. Whether you seek to master elemental forces, uncover ancient arcane secrets, or develop new magical theories, Aetheric Studies welcomes scholars, mages, and theorists. From practical spellcasting to esoteric research, members explore how aether shapes reality itself. Perfect for characters interested in magic, research, teaching, or pushing the boundaries of what\'s possible with aetheric manipulation.'
+    },
+    {
+      id: 'bioscience',
+      name: 'Bio-Science Studies',
+      shortDesc: 'Medicine, alchemy, and biological sciences',
+      fullDesc: 'The intersection of life, science, and innovation. Bio-Science encompasses not just healing and medicine, but also alchemy, toxicology, bio-engineering, and experimental biology. Members might be traditional healers, poison specialists, alchemists brewing exotic compounds, or bio-engineers grafting new capabilities onto living beings. This department runs the Consortium\'s medical facilities while pushing the boundaries of what life can become through science and innovation.'
+    },
+    {
+      id: 'creation',
+      name: 'Creation Studies',  
+      shortDesc: 'Engineering, technology, and manufacturing',
+      fullDesc: 'Build the future with your hands and mind. Creation Studies covers engineering, robotics, weapon smithing, magitek development, and technological innovation. Whether you\'re crafting precision firearms, building mechanical constructs, developing new tools, or maintaining the Consortium\'s technological infrastructure, this department values practical innovation. Perfect for inventors, engineers, crafters, and anyone who believes problems are solved through superior technology and skilled craftsmanship.'
+    },
+    {
+      id: 'anthropological',
+      name: 'Anthropological Studies',
+      shortDesc: 'Culture, history, and archaeological research',
+      fullDesc: 'Uncover the secrets of civilizations past and present. This department combines archaeology, cultural studies, historical research, and lore preservation. Members might excavate ancient ruins, study foreign cultures, preserve historical artifacts, or investigate mysterious phenomena with scholarly rigor. From deciphering dead languages to understanding the customs of distant peoples, Anthropological Studies bridges the gap between knowledge and wisdom through careful research and cultural understanding.'
+    },
+    {
+      id: 'challenge',
+      name: 'Department of Challenge',
+      shortDesc: 'Combat training and monster hunting',
+      fullDesc: 'Face danger head-on and emerge stronger. The Department of Challenge focuses on combat excellence, monster hunting, physical training, and tactical operations. Members are the Consortium\'s front-line defenders, elite hunters, and combat instructors. Whether tracking dangerous beasts, training fellow Ravens in martial arts, or leading dangerous expeditions into hostile territory, this department values courage, skill, and the relentless pursuit of martial excellence.'
+    },
+    {
+      id: 'wilderness',
+      name: 'Wilderness Studies',
+      shortDesc: 'Nature, survival, and field research',
+      fullDesc: 'Master the untamed world beyond civilization. Wilderness Studies encompasses survival skills, natural sciences, field research, and environmental expertise. Members might be trackers, botanists, survival experts, beast tamers, or field researchers who thrive in dangerous environments. From navigating treacherous terrain to understanding ecosystems, this department values self-reliance, environmental knowledge, and the ability to thrive where others merely survive.'
+    }
+  ];
+
   const handleChange = (field, value) => {
     const newData = { ...data, [field]: value };
     
     // Calculate reputation when race or origin changes
     if (field === 'race' || field === 'origin') {
-      newData.reputation = calculateReputation(newData.race, newData.origin);
+      newData.reputation = calculateReputation(newData.race, newData.origin, data.bonusFactions || []);
     }
     
     setData(newData);
   };
 
-  // Calculate reputation based on race and origin
-  const calculateReputation = (race, origin) => {
-    const factions = {
+  // Updated reputation calculation with sample factions
+  const calculateReputation = (race, origin, bonusFactions = []) => {
+    const sampleFactions = {
       'The Syndicate': {
         base: 0,
         raceBonus: ['Lalafell', 'Garlean (Pureblood)'],
         originBonus: ['Ul\'dah & Thanalan'],
-        originPenalty: ['Ala Mhigo', 'Azim Steppe', 'Bozja']
+        originPenalty: ['Ala Mhigo', 'Gyr Abania', 'Bozja']
       },
-      'Brass Blades': {
+      'Immortal Flames': {
         base: 0,
         raceBonus: [],
-        originBonus: ['Ul\'dah & Thanalan'],
-        originPenalty: ['Ala Mhigo', 'Azim Steppe']
+        originBonus: ['Ul\'dah & Thanalan', 'Ala Mhigo & Gyr Abania'],
+        originPenalty: ['Garlemald & Imperial Territories']
       },
-      'Order of Nald\'thal': {
-        base: 0,
-        raceBonus: ['Lalafell', 'Garlean (Pureblood)'],
-        originBonus: [],
-        originPenalty: ['Gelmorra (pre-Gridanian subterranean)', 'Tural (Native Origin)']
-      },
-      'Brass Blade Dissidents': {
+      'Order of the Twin Adder': {
         base: 0,
         raceBonus: [],
-        originBonus: ['Ul\'dah & Thanalan'],
-        originPenalty: []
+        originBonus: ['Gridania & The Black Shroud'],
+        originPenalty: ['Garlemald & Imperial Territories', 'Ishgard & Coerthas']
       },
-      'The Sandguard Militia': {
+      'The Maelstrom': {
         base: 0,
         raceBonus: [],
-        originBonus: ['Ul\'dah & Thanalan'],
-        originPenalty: []
+        originBonus: ['Limsa Lominsa & La Noscea'],
+        originPenalty: ['Garlemald & Imperial Territories']
       },
-      'The Mirage Caravan': {
+      'Temple Knights': {
         base: 0,
-        raceBonus: [],
-        originBonus: ['Ul\'dah & Thanalan'],
-        originPenalty: []
+        raceBonus: ['Elezen'],
+        originBonus: ['Ishgard & Coerthas'],
+        originPenalty: ['Dravania', 'Garlemald & Imperial Territories']
       },
       'The Amalj\'aa Tribe Coalition': {
         base: 0,
         raceBonus: [],
         originBonus: [],
         originPenalty: [],
-        special: true
+        special: 'amalj\'aa'
       }
     };
 
     const reputation = {};
     
-    Object.entries(factions).forEach(([factionName, faction]) => {
+    Object.entries(sampleFactions).forEach(([factionName, faction]) => {
       let rep = faction.base;
       
       // Special handling for Amalj'aa Coalition
-      if (faction.special && factionName === 'The Amalj\'aa Tribe Coalition') {
+      if (faction.special === 'amalj\'aa') {
         if (race === 'Amalj\'aa (Thanalan)') {
-          rep = 150; // Special bonus
+          rep = 150;
         } else {
-          rep = -200; // Special penalty for non-Amalj'aa
+          rep = -200;
         }
       } else {
         // Standard reputation calculation
@@ -244,6 +278,9 @@ function CharacterBasicsStep({ data, setData, onNext }) {
         if (faction.originBonus.includes(origin)) rep += 20;
         if (faction.originPenalty.includes(origin)) rep -= 20;
       }
+      
+      // Add bonus faction modifier
+      if (bonusFactions.includes(factionName)) rep += 150;
       
       reputation[factionName] = rep;
     });
@@ -262,13 +299,13 @@ function CharacterBasicsStep({ data, setData, onNext }) {
   };
 
   const getReputationColor = (rep) => {
-    if (rep <= -301) return '#dc3545'; // Red
-    if (rep <= -101) return '#fd7e14'; // Orange
-    if (rep <= -1) return '#ffc107'; // Yellow
-    if (rep === 0) return '#6c757d'; // Gray
-    if (rep <= 150) return '#20c997'; // Teal
-    if (rep <= 350) return '#28a745'; // Green
-    return '#007bff'; // Blue
+    if (rep <= -301) return '#dc3545';
+    if (rep <= -101) return '#fd7e14';
+    if (rep <= -1) return '#ffc107';
+    if (rep === 0) return '#6c757d';
+    if (rep <= 150) return '#20c997';
+    if (rep <= 350) return '#28a745';
+    return '#007bff';
   };
 
   return (
@@ -322,7 +359,7 @@ function CharacterBasicsStep({ data, setData, onNext }) {
         </select>
       </div>
 
-      <div style={{ marginBottom: '20px' }}>
+      <div style={{ marginBottom: '30px' }}>
         <label style={{ display: 'block', marginBottom: '10px', fontWeight: 'bold' }}>
           Character Race:
         </label>
@@ -397,6 +434,48 @@ function CharacterBasicsStep({ data, setData, onNext }) {
         </div>
       </div>
 
+      {/* Department Selection */}
+      <div style={{ marginBottom: '30px' }}>
+        <h3>Department Selection</h3>
+        <p style={{ marginBottom: '20px' }}>
+          Choose the department that best aligns with your character's interests and expertise. 
+          Your department will influence your roleplay opportunities and specialization paths.
+        </p>
+        
+        <div style={{ marginBottom: '20px' }}>
+          {departments.map(dept => (
+            <div key={dept.id} style={{ 
+              marginBottom: '15px', 
+              padding: '15px', 
+              border: data.department === dept.id ? '2px solid #007bff' : '1px solid #ddd',
+              borderRadius: '5px',
+              backgroundColor: data.department === dept.id ? '#f0f8ff' : 'white',
+              cursor: 'pointer'
+            }}
+            onClick={() => handleChange('department', dept.id)}
+            >
+              <label style={{ cursor: 'pointer', display: 'block' }}>
+                <div style={{ display: 'flex', alignItems: 'flex-start' }}>
+                  <input 
+                    type="radio"
+                    name="department"
+                    value={dept.id}
+                    checked={data.department === dept.id}
+                    onChange={() => handleChange('department', dept.id)}
+                    style={{ marginRight: '10px', marginTop: '5px' }}
+                  />
+                  <div>
+                    <h4 style={{ margin: '0 0 5px 0', color: '#333' }}>{dept.name}</h4>
+                    <p style={{ margin: '0 0 10px 0', fontStyle: 'italic', color: '#666' }}>{dept.shortDesc}</p>
+                    <p style={{ margin: '0', fontSize: '14px', lineHeight: '1.4', color: '#555' }}>{dept.fullDesc}</p>
+                  </div>
+                </div>
+              </label>
+            </div>
+          ))}
+        </div>
+      </div>
+
       {/* Live Reputation Preview */}
       {data.race && data.origin && (
         <div style={{ 
@@ -406,12 +485,12 @@ function CharacterBasicsStep({ data, setData, onNext }) {
           border: '1px solid #ddd', 
           borderRadius: '5px' 
         }}>
-          <h4 style={{ margin: '0 0 10px 0' }}>Starting Reputation Preview</h4>
+          <h4 style={{ margin: '0 0 10px 0' }}>Starting Reputation Preview (Sample)</h4>
           <p style={{ fontSize: '14px', color: '#666', margin: '0 0 10px 0' }}>
-            Based on your race and origin selection:
+            Based on your race and origin selection (full faction list on next step):
           </p>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px' }}>
-            {Object.entries(data.reputation || {}).map(([faction, rep]) => (
+            {Object.entries(calculateReputation(data.race, data.origin, data.bonusFactions || [])).map(([faction, rep]) => (
               <div key={faction} style={{ 
                 padding: '8px', 
                 backgroundColor: 'white', 
@@ -428,27 +507,569 @@ function CharacterBasicsStep({ data, setData, onNext }) {
         </div>
       )}
 
-      <button 
-        onClick={onNext}
-        disabled={!data.name || !data.age || !data.origin || !data.race}
-        style={{ 
-          padding: '12px 24px', 
-          fontSize: '16px',
-          backgroundColor: (data.name && data.age && data.origin && data.race) ? '#007bff' : '#ccc',
-          color: 'white',
-          border: 'none',
-          borderRadius: '5px',
-          cursor: (data.name && data.age && data.origin && data.race) ? 'pointer' : 'not-allowed'
-        }}
-      >
-        Continue to Reputation & Factions
-      </button>
+      <div style={{ display: 'flex', gap: '10px' }}>
+        <button 
+          onClick={onBack}
+          style={{ 
+            padding: '12px 24px', 
+            fontSize: '16px',
+            backgroundColor: '#6c757d',
+            color: 'white',
+            border: 'none',
+            borderRadius: '5px',
+            cursor: 'pointer'
+          }}
+        >
+          ← Back to Welcome
+        </button>
+        
+        <button 
+          onClick={onNext}
+          disabled={!data.name || !data.age || !data.origin || !data.race || !data.department}
+          style={{ 
+            padding: '12px 24px', 
+            fontSize: '16px',
+            backgroundColor: (data.name && data.age && data.origin && data.race && data.department) ? '#007bff' : '#ccc',
+            color: 'white',
+            border: 'none',
+            borderRadius: '5px',
+            cursor: (data.name && data.age && data.origin && data.race && data.department) ? 'pointer' : 'not-allowed'
+          }}
+        >
+          Continue to Reputation & Factions
+        </button>
+      </div>
     </div>
   );
 }
 
-// Step 3: Reputation & Factions
-function ReputationStep({ data, setData, onNext }) {
+// Step 3: Reputation & Factions (COMPLETE)
+function ReputationStep({ data, setData, onNext, onBack }) {
+  const [selectedFactions, setSelectedFactions] = useState(data.bonusFactions || []);
+
+  const allFactions = {
+    'Ul\'dah & Thanalan': [
+      {
+        name: 'The Syndicate',
+        description: 'The true power behind Ul\'dah, composed of merchant-princes and oligarchs.',
+        raceBonus: ['Lalafell', 'Garlean (Pureblood)'],
+        originBonus: ['Ul\'dah & Thanalan'],
+        originPenalty: ['Ala Mhigo', 'Gyr Abania', 'Bozja']
+      },
+      {
+        name: 'Immortal Flames',
+        description: 'Ul\'dah\'s Grand Company military organization.',
+        raceBonus: [],
+        originBonus: ['Ul\'dah & Thanalan', 'Ala Mhigo & Gyr Abania'],
+        originPenalty: ['Garlemald & Imperial Territories']
+      },
+      {
+        name: 'Brass Blades',
+        description: 'Mercenary-style guards hired by Ul\'dah, often corrupt.',
+        raceBonus: [],
+        originBonus: ['Ul\'dah & Thanalan'],
+        originPenalty: ['Ala Mhigo', 'Gyr Abania', 'Azim Steppe']
+      },
+      {
+        name: 'Order of Nald\'thal',
+        description: 'Religious body controlling death and commerce.',
+        raceBonus: ['Lalafell', 'Garlean (Pureblood)'],
+        originBonus: [],
+        originPenalty: ['Gyr Abania', 'Gelmorra (pre-Gridanian subterranean)', 'Tural (Native Origin)']
+      },
+      {
+        name: 'Brass Blade Dissidents',
+        description: 'Royalist faction of former Brass Blades members focused on protecting poor citizens.',
+        raceBonus: [],
+        originBonus: ['Ul\'dah & Thanalan'],
+        originPenalty: []
+      },
+      {
+        name: 'The Sandguard Militia',
+        description: 'Former Royalist militia protecting greater Thanalan region.',
+        raceBonus: [],
+        originBonus: ['Ul\'dah & Thanalan'],
+        originPenalty: []
+      },
+      {
+        name: 'The Mirage Caravan',
+        description: 'Smaller business folk united to compete with The Syndicate.',
+        raceBonus: [],
+        originBonus: ['Ul\'dah & Thanalan'],
+        originPenalty: []
+      },
+      {
+        name: 'The Amalj\'aa Tribe Coalition',
+        description: 'Multiple Amalj\'aa tribes united to preserve their culture.',
+        raceBonus: [],
+        originBonus: [],
+        originPenalty: [],
+        special: 'amalj\'aa'
+      }
+    ],
+    'Gridania & The Black Shroud': [
+      {
+        name: 'Order of the Twin Adder',
+        description: 'Gridania\'s Grand Company military organization.',
+        raceBonus: [],
+        originBonus: ['Gridania & The Black Shroud'],
+        originPenalty: ['Garlemald & Imperial Territories', 'Ishgard & Coerthas']
+      },
+      {
+        name: 'Wood Wailers',
+        description: 'Gridania\'s forest guardians and peacekeepers.',
+        raceBonus: ['Elezen'],
+        originBonus: ['Gridania & The Black Shroud'],
+        originPenalty: ['Gelmorra (pre-Gridanian subterranean)']
+      },
+      {
+        name: 'Gods\' Quiver',
+        description: 'Elite archers protecting the Black Shroud.',
+        raceBonus: ['Elezen'],
+        originBonus: ['Gridania & The Black Shroud'],
+        originPenalty: ['Garlemald & Imperial Territories']
+      },
+      {
+        name: 'Conjurer\'s Guild / Stillglade Fane',
+        description: 'Healers and nature magic practitioners.',
+        raceBonus: ['Hyur'],
+        originBonus: ['Gridania & The Black Shroud'],
+        originPenalty: ['Garlemald & Imperial Territories', 'Gelmorra (pre-Gridanian subterranean)']
+      },
+      {
+        name: 'Sylph Tribe',
+        description: 'Forest-dwelling beastmen allied with Gridania.',
+        raceBonus: [],
+        originBonus: [],
+        originPenalty: ['Garlemald & Imperial Territories']
+      }
+    ],
+    'Limsa Lominsa & La Noscea': [
+      {
+        name: 'The Maelstrom',
+        description: 'Limsa Lominsa\'s Grand Company naval force.',
+        raceBonus: [],
+        originBonus: ['Limsa Lominsa & La Noscea'],
+        originPenalty: ['Garlemald & Imperial Territories']
+      },
+      {
+        name: 'Yellowjackets',
+        description: 'Limsa Lominsa\'s maritime security force.',
+        raceBonus: [],
+        originBonus: ['Limsa Lominsa & La Noscea'],
+        originPenalty: ['Hingashi', 'Tural (Native Origin)']
+      },
+      {
+        name: 'Kraken\'s Arms / East Aldenard Trading Co.',
+        description: 'Major trading consortium.',
+        raceBonus: ['Roegadyn'],
+        originBonus: ['Limsa Lominsa & La Noscea'],
+        originPenalty: ['Garlemald & Imperial Territories']
+      },
+      {
+        name: 'Sanguine Sirens',
+        description: 'Pirate crew with legitimate business interests.',
+        raceBonus: ['Hyur'],
+        originBonus: ['Limsa Lominsa & La Noscea'],
+        originPenalty: ['Radz-at-Han (Thavnair)']
+      },
+      {
+        name: 'Bloody Executioners',
+        description: 'Notorious pirate crew.',
+        raceBonus: [],
+        originBonus: ['Limsa Lominsa & La Noscea'],
+        originPenalty: []
+      },
+      {
+        name: 'Company of Heroes (Legacy)',
+        description: 'Veteran adventuring company.',
+        raceBonus: [],
+        originBonus: ['Limsa Lominsa & La Noscea'],
+        originPenalty: []
+      },
+      {
+        name: 'Kobold Tribes',
+        description: 'Mining beastmen of La Noscea.',
+        raceBonus: [],
+        originBonus: [],
+        originPenalty: [],
+        special: 'kobold'
+      },
+      {
+        name: 'Sahagin Tribe',
+        description: 'Sea-dwelling beastmen.',
+        raceBonus: [],
+        originBonus: [],
+        originPenalty: [],
+        special: 'sahagin'
+      }
+    ],
+    'Ishgard & Coerthas': [
+      {
+        name: 'Temple Knights',
+        description: 'Elite religious warriors of Ishgard.',
+        raceBonus: ['Elezen'],
+        originBonus: ['Ishgard & Coerthas'],
+        originPenalty: ['Dravania', 'Garlemald & Imperial Territories']
+      },
+      {
+        name: 'Holy See Clergy',
+        description: 'Religious leadership of Ishgard.',
+        raceBonus: ['Elezen'],
+        originBonus: ['Ishgard & Coerthas'],
+        originPenalty: ['Sharlayan']
+      },
+      {
+        name: 'House Fortemps',
+        description: 'Noble house known for honor and diplomacy.',
+        raceBonus: ['Elezen'],
+        originBonus: ['Ishgard & Coerthas'],
+        originPenalty: []
+      },
+      {
+        name: 'House Durendaire',
+        description: 'Noble house with military traditions.',
+        raceBonus: ['Elezen'],
+        originBonus: ['Ishgard & Coerthas'],
+        originPenalty: ['Dravania']
+      },
+      {
+        name: 'House Dzemael',
+        description: 'Noble house with mining interests.',
+        raceBonus: ['Elezen'],
+        originBonus: ['Ishgard & Coerthas'],
+        originPenalty: []
+      },
+      {
+        name: 'House Haillenarte',
+        description: 'Noble house with crafting traditions.',
+        raceBonus: [],
+        originBonus: ['Ishgard & Coerthas'],
+        originPenalty: ['Garlemald & Imperial Territories']
+      },
+      {
+        name: 'Ishgardian Restorationists',
+        description: 'Citizens working to rebuild Ishgard.',
+        raceBonus: [],
+        originBonus: ['Ishgard & Coerthas'],
+        originPenalty: []
+      },
+      {
+        name: 'Hraesvelgr\'s Brood',
+        description: 'Dragon clan allied with some Ishgardians.',
+        raceBonus: [],
+        originBonus: ['Dravania'],
+        originPenalty: ['Ishgard & Coerthas']
+      },
+      {
+        name: 'Moogles of Moghome',
+        description: 'Helpful creatures of the Churning Mists.',
+        raceBonus: [],
+        originBonus: [],
+        originPenalty: []
+      }
+    ],
+    'Ala Mhigo & Gyr Abania': [
+      {
+        name: 'Ala Mhigan Resistance / Alliance',
+        description: 'Freedom fighters who liberated Ala Mhigo from Garlemald.',
+        raceBonus: ['Hyur'],
+        originBonus: ['Ala Mhigo', 'Ul\'dah & Thanalan'],
+        originPenalty: ['Garlemald & Imperial Territories', 'Gridania & The Black Shroud']
+      },
+      {
+        name: 'Fist of Rhalgr',
+        description: 'Monks and martial artists following the Destroyer.',
+        raceBonus: ['Hyur'],
+        originBonus: ['Ala Mhigo'],
+        originPenalty: ['Garlemald & Imperial Territories', 'Gridania & The Black Shroud']
+      },
+      {
+        name: 'Alacran Syndicate',
+        description: 'Post-liberation criminal organization.',
+        raceBonus: [],
+        originBonus: ['Ala Mhigo'],
+        originPenalty: ['Doma', 'Hingashi']
+      },
+      {
+        name: 'Ananta Tribe (Vira)',
+        description: 'Snake-like beastmen of the Peaks.',
+        raceBonus: ['Aanta (Gyr Abania)'],
+        originBonus: ['Ala Mhigo'],
+        originPenalty: ['Garlemald & Imperial Territories']
+      }
+    ],
+    'Doma & Yanxia': [
+      {
+        name: 'Doman Liberation Front',
+        description: 'Rebels who freed Doma from imperial rule.',
+        raceBonus: ['Au Ra'],
+        originBonus: ['Doma', 'Hingashi'],
+        originPenalty: ['Garlemald & Imperial Territories', 'Azim Steppe']
+      },
+      {
+        name: 'Doman Regency',
+        description: 'New government rebuilding Doma.',
+        raceBonus: [],
+        originBonus: ['Doma', 'Sharlayan'],
+        originPenalty: []
+      },
+      {
+        name: 'The Confederacy',
+        description: 'River pirates turned legitimate traders.',
+        raceBonus: [],
+        originBonus: ['Doma', 'Hingashi'],
+        originPenalty: ['Garlemald & Imperial Territories']
+      },
+      {
+        name: 'Kojin Tribe (Blue)',
+        description: 'Peaceful turtle-like traders.',
+        raceBonus: [],
+        originBonus: ['Radz-at-Han (Thavnair)'],
+        originPenalty: ['Garlemald & Imperial Territories']
+      },
+      {
+        name: 'Lupin Clans',
+        description: 'Wolf-like beastmen of Yanxia.',
+        raceBonus: [],
+        originBonus: ['Doma'],
+        originPenalty: ['Garlemald & Imperial Territories']
+      },
+      {
+        name: 'Sui-no-Sato',
+        description: 'Hidden underwater village of Raen Au Ra.',
+        raceBonus: ['Au Ra'],
+        originBonus: [],
+        originPenalty: [] // Special: all non-Au Ra get penalty
+      }
+    ],
+    'Hingashi': [
+      {
+        name: 'Kugane Sekiseigumi',
+        description: 'Kugane\'s peacekeeping force.',
+        raceBonus: [],
+        originBonus: ['Hingashi'],
+        originPenalty: ['Garlemald & Imperial Territories']
+      },
+      {
+        name: 'Hingan Government (Bakufu)',
+        description: 'Traditional isolationist government.',
+        raceBonus: [],
+        originBonus: ['Hingashi'],
+        originPenalty: [] // Special: all non-Hingans get penalty
+      }
+    ],
+    'Sharlayan': [
+      {
+        name: 'The Forum',
+        description: 'Scholarly governing body of Sharlayan.',
+        raceBonus: [],
+        originBonus: ['Sharlayan'],
+        originPenalty: ['Garlemald & Imperial Territories']
+      },
+      {
+        name: 'Students of Baldesion',
+        description: 'Researchers studying primals and aether.',
+        raceBonus: [],
+        originBonus: ['Sharlayan', 'Radz-at-Han (Thavnair)'],
+        originPenalty: []
+      },
+      {
+        name: 'The Studium / Library Guilds',
+        description: 'Academic institutions and knowledge keepers.',
+        raceBonus: [],
+        originBonus: ['Sharlayan'],
+        originPenalty: []
+      }
+    ],
+    'Garlemald & Imperial Territories': [
+      {
+        name: 'Garlean Empire',
+        description: 'The conquered imperial remnants.',
+        raceBonus: ['Garlean (Pureblood)'],
+        originBonus: ['Garlemald & Imperial Territories'],
+        originPenalty: ['Ul\'dah & Thanalan', 'Gridania & The Black Shroud', 'Limsa Lominsa & La Noscea'] // All Grand Company origins
+      },
+      {
+        name: 'Populares (Moderates)',
+        description: 'Imperial moderates seeking reconciliation.',
+        raceBonus: [],
+        originBonus: ['Garlemald & Imperial Territories', 'Dalmasca', 'Bozja'],
+        originPenalty: []
+      },
+      {
+        name: 'Optimates (Hardliners)',
+        description: 'Imperial hardliners wanting restoration.',
+        raceBonus: [],
+        originBonus: ['Garlemald & Imperial Territories'],
+        originPenalty: []
+      }
+    ],
+    'Radz-at-Han (Thavnair)': [
+      {
+        name: 'Radz-at-Han Government',
+        description: 'Mercantile government of the great trade city.',
+        raceBonus: [],
+        originBonus: ['Radz-at-Han (Thavnair)', 'Sharlayan'],
+        originPenalty: ['Garlemald & Imperial Territories']
+      },
+      {
+        name: 'Radiant Host',
+        description: 'Thavnair\'s military and peacekeeping force.',
+        raceBonus: [],
+        originBonus: ['Radz-at-Han (Thavnair)'],
+        originPenalty: ['Garlemald & Imperial Territories']
+      },
+      {
+        name: 'Arkasodara Tribe',
+        description: 'Elephant-like beastmen traders.',
+        raceBonus: ['Arkasodara (Thavnair)'],
+        originBonus: ['Radz-at-Han (Thavnair)'],
+        originPenalty: []
+      },
+      {
+        name: 'Great Work (Alchemists)',
+        description: 'Alchemical research organization.',
+        raceBonus: [],
+        originBonus: ['Radz-at-Han (Thavnair)', 'Ul\'dah & Thanalan'],
+        originPenalty: []
+      },
+      {
+        name: 'Satrap\'s Favorites (Honorary)',
+        description: 'Elite social circle of Thavnair.',
+        raceBonus: [],
+        originBonus: ['Radz-at-Han (Thavnair)'],
+        originPenalty: []
+      }
+    ],
+    'The First (Restricted)': [
+      {
+        name: 'The Crystarium',
+        description: 'Crystal city-state on the First.',
+        raceBonus: [],
+        originBonus: ['Norvrandt (The First – restricted)'],
+        originPenalty: []
+      },
+      {
+        name: 'Eulmore',
+        description: 'Decadent city of consumption.',
+        raceBonus: [],
+        originBonus: ['Norvrandt (The First – restricted)'],
+        originPenalty: []
+      },
+      {
+        name: 'Night\'s Blessed (Fanow)',
+        description: 'Viera community in Rak\'tika.',
+        raceBonus: ['Viera'],
+        originBonus: ['Norvrandt (The First – restricted)'],
+        originPenalty: []
+      },
+      {
+        name: 'Dwarven Clans',
+        description: 'Underground craftsmen of the First.',
+        raceBonus: [],
+        originBonus: ['Norvrandt (The First – restricted)'],
+        originPenalty: []
+      }
+    ],
+    'The Void (Restricted)': [
+      {
+        name: 'Void Warlords',
+        description: 'Powerful voidsent rulers.',
+        raceBonus: ['Voidsent-descended Mortal (Thirteenth origin; highly restricted)'],
+        originBonus: [],
+        originPenalty: []
+      },
+      {
+        name: 'Thirteenth Survivors',
+        description: 'Remnants of the lost shard.',
+        raceBonus: [],
+        originBonus: ['The Thirteenth / Void (restricted)'],
+        originPenalty: []
+      }
+    ],
+    'Meracydia (Restricted)': [
+      {
+        name: 'Meracydian Confederacy (Ancient)',
+        description: 'Ancient dragon civilization.',
+        raceBonus: [],
+        originBonus: ['Dravania'],
+        originPenalty: ['Garlemald & Imperial Territories']
+      }
+    ]
+  };
+
+  const getReputationLevel = (rep) => {
+    if (rep <= -301) return 'Hated';
+    if (rep <= -101) return 'Distrusted';
+    if (rep <= -1) return 'Tolerated';
+    if (rep === 0) return 'Unknown';
+    if (rep <= 150) return 'Recognized';
+    if (rep <= 350) return 'Trusted';
+    return 'Agent';
+  };
+
+  const getReputationColor = (rep) => {
+    if (rep <= -301) return '#dc3545';
+    if (rep <= -101) return '#fd7e14';
+    if (rep <= -1) return '#ffc107';
+    if (rep === 0) return '#6c757d';
+    if (rep <= 150) return '#20c997';
+    if (rep <= 350) return '#28a745';
+    return '#007bff';
+  };
+
+  const calculateFactionReputation = (faction) => {
+    let rep = 0;
+    
+    // Special handling for specific factions
+    if (faction.special === 'amalj\'aa') {
+      if (data.race === 'Amalj\'aa (Thanalan)') return 150;
+      else return -200;
+    }
+    if (faction.special === 'kobold') {
+      if (data.race === 'Kobold') return 150;
+      else if (data.origin === 'Limsa Lominsa & La Noscea') return -200;
+      return 0;
+    }
+    if (faction.special === 'sahagin') {
+      if (data.race === 'Sahagin') return 150;
+      else if (data.origin === 'Limsa Lominsa & La Noscea') return -200;
+      return 0;
+    }
+    
+    // Special penalties for certain factions
+    if (faction.name === 'Sui-no-Sato' && !data.race.includes('Au Ra')) {
+      rep -= 20; // All non-Au Ra penalty
+    }
+    if (faction.name === 'Hingan Government (Bakufu)' && data.origin !== 'Hingashi') {
+      rep -= 20; // All non-Hingans penalty
+    }
+    
+    // Standard calculation
+    if (faction.raceBonus.includes(data.race)) rep += 20;
+    if (faction.originBonus.includes(data.origin)) rep += 20;
+    if (faction.originPenalty.includes(data.origin)) rep -= 20;
+    
+    // Add bonus faction modifier
+    if (selectedFactions.includes(faction.name)) rep += 150;
+    
+    return rep;
+  };
+
+  const handleFactionToggle = (factionName) => {
+    let newSelected = [...selectedFactions];
+    
+    if (newSelected.includes(factionName)) {
+      newSelected = newSelected.filter(name => name !== factionName);
+    } else if (newSelected.length < 2) {
+      newSelected.push(factionName);
+    }
+    
+    setSelectedFactions(newSelected);
+    setData(prev => ({ ...prev, bonusFactions: newSelected }));
+  };
+
   const reputationTiers = [
     {
       name: 'Hated',
@@ -494,107 +1115,24 @@ function ReputationStep({ data, setData, onNext }) {
     }
   ];
 
-  const allFactions = {
-    'Ul\'dah & Thanalan': [
-      {
-        name: 'The Syndicate',
-        description: 'The true power behind Ul\'dah, composed of merchant-princes and oligarchs.',
-        raceBonus: ['Lalafell', 'Garlean (Pureblood)'],
-        originBonus: ['Ul\'dah & Thanalan'],
-        originPenalty: ['Ala Mhigo', 'Azim Steppe', 'Bozja']
-      },
-      {
-        name: 'Brass Blades',
-        description: 'Mercenary-style guards hired by Ul\'dah, often corrupt.',
-        raceBonus: [],
-        originBonus: ['Ul\'dah & Thanalan'],
-        originPenalty: ['Ala Mhigo', 'Azim Steppe']
-      },
-      {
-        name: 'Order of Nald\'thal',
-        description: 'Religious body controlling death and commerce.',
-        raceBonus: ['Lalafell', 'Garlean (Pureblood)'],
-        originBonus: [],
-        originPenalty: ['Gelmorra (pre-Gridanian subterranean)', 'Tural (Native Origin)']
-      },
-      {
-        name: 'Brass Blade Dissidents',
-        description: 'Royalist faction of former Brass Blades members focused on protecting poor citizens in Ul\'Dah',
-        raceBonus: [],
-        originBonus: ['Ul\'dah & Thanalan'],
-        originPenalty: []
-      },
-      {
-        name: 'The Sandguard Militia',
-        description: 'Former Royalist militia group protecting the greater Thanalan region, however they have caved to Syndicate pressure in recent years to work in line with them -- however the protection of citizens across Thanalan remains their priority',
-        raceBonus: [],
-        originBonus: ['Ul\'dah & Thanalan'],
-        originPenalty: []
-      },
-      {
-        name: 'The Mirage Caravan',
-        description: 'A group of smaller business folk who unite under one banner to promote fair trade deals to remain competitive with The Syndicate',
-        raceBonus: [],
-        originBonus: ['Ul\'dah & Thanalan'],
-        originPenalty: []
-      },
-      {
-        name: 'The Amalj\'aa Tribe Coalition',
-        description: 'Multiple Amalj\'aa tribes united under one banner to preserve their culture and identity',
-        raceBonus: [],
-        originBonus: [],
-        originPenalty: [],
-        special: 'amalj\'aa'
-      }
-    ]
-  };
-
-  const getReputationLevel = (rep) => {
-    if (rep <= -301) return 'Hated';
-    if (rep <= -101) return 'Distrusted';
-    if (rep <= -1) return 'Tolerated';
-    if (rep === 0) return 'Unknown';
-    if (rep <= 150) return 'Recognized';
-    if (rep <= 350) return 'Trusted';
-    return 'Agent';
-  };
-
-  const getReputationColor = (rep) => {
-    const tier = reputationTiers.find(t => 
-      t.name === getReputationLevel(rep)
-    );
-    return tier ? tier.color : '#6c757d';
-  };
-
-  const calculateFactionReputation = (faction) => {
-    let rep = 0;
-    
-    // Special handling for Amalj'aa Coalition
-    if (faction.special === 'amalj\'aa') {
-      if (data.race === 'Amalj\'aa (Thanalan)') {
-        return 150; // Special bonus
-      } else {
-        return -200; // Special penalty for non-Amalj'aa
-      }
-    }
-    
-    // Standard calculation
-    if (faction.raceBonus.includes(data.race)) rep += 20;
-    if (faction.originBonus.includes(data.origin)) rep += 20;
-    if (faction.originPenalty.includes(data.origin)) rep -= 20;
-    
-    return rep;
-  };
-
   return (
     <div>
       <h2>Reputation & Factions</h2>
       <p>Your character's reputation with various factions shapes their opportunities and interactions in the world.</p>
       
-      {/* Reputation Tier Explanation */}
-      <div style={{ marginBottom: '30px' }}>
-        <h3>How Reputation Tiers Work</h3>
-        <div style={{ display: 'grid', gap: '10px' }}>
+      {/* Reputation Tier Explanation (Collapsible) */}
+      <details style={{ marginBottom: '30px' }}>
+        <summary style={{ 
+          cursor: 'pointer', 
+          padding: '10px', 
+          backgroundColor: '#f8f9fa', 
+          border: '1px solid #ddd', 
+          borderRadius: '5px',
+          fontWeight: 'bold'
+        }}>
+          How Reputation Tiers Work (Click to expand)
+        </summary>
+        <div style={{ marginTop: '15px', display: 'grid', gap: '10px' }}>
           {reputationTiers.map(tier => (
             <div key={tier.name} style={{ 
               padding: '15px', 
@@ -620,150 +1158,238 @@ function ReputationStep({ data, setData, onNext }) {
             </div>
           ))}
         </div>
-      </div>
+      </details>
 
-      {/* Reputation Tracking Notes */}
+      {/* Faction Bonus Selection */}
       <div style={{ 
         marginBottom: '30px', 
-        padding: '15px', 
-        backgroundColor: '#e9ecef', 
+        padding: '20px', 
+        backgroundColor: '#e7f3ff', 
+        border: '2px solid #007bff', 
         borderRadius: '5px' 
       }}>
-        <h4 style={{ margin: '0 0 10px 0' }}>Reputation Tracking Notes</h4>
-        <ul style={{ margin: 0, paddingLeft: '20px' }}>
-          <li>Reputation may be earned through RP, influence point investment, event participation, or story arcs.</li>
-          <li>Staff may assign reputation shifts during faction events based on character behavior and narrative impact.</li>
-          <li>Faction leaders (PC or NPC) may petition staff to shift someone's standing within their group.</li>
-          <li>Players may begin with a predefined reputation based on their race, region, or background, using your earlier reputation modifier table.</li>
-        </ul>
+        <h3 style={{ margin: '0 0 15px 0', color: '#007bff' }}>
+          Choose Your Starting Reputation Bonuses
+        </h3>
+        <p style={{ marginBottom: '15px' }}>
+          Select up to <strong>2 factions</strong> to gain <strong>+150 reputation</strong> with. 
+          This represents prior relationships, employment, or connections your character has established.
+        </p>
+        <div style={{ 
+          padding: '10px', 
+          backgroundColor: '#fff', 
+          borderRadius: '3px',
+          fontSize: '14px',
+          fontWeight: 'bold'
+        }}>
+          Selected: {selectedFactions.length}/2 
+          {selectedFactions.length > 0 && (
+            <span style={{ marginLeft: '10px', color: '#28a745' }}>
+              {selectedFactions.join(', ')}
+            </span>
+          )}
+        </div>
       </div>
 
-      {/* Current Character's Reputation */}
-      <div style={{ marginBottom: '30px' }}>
-        <h3>Your Starting Reputation</h3>
-        <p style={{ marginBottom: '15px' }}>
-          <strong>Character:</strong> {data.name} ({data.race} from {data.origin})
-        </p>
-        
-        {/* Ul'dah & Thanalan Factions */}
-        <div style={{ marginBottom: '20px' }}>
-          <h4 style={{ 
+      {/* All Factions by Region */}
+      {Object.entries(allFactions).map(([regionName, factions]) => (
+        <div key={regionName} style={{ marginBottom: '30px' }}>
+          <h3 style={{ 
             margin: '0 0 15px 0', 
             padding: '10px', 
-            backgroundColor: '#d4b106', 
+            backgroundColor: regionName.includes('Restricted') ? '#dc3545' : '#6c757d', 
             color: 'white', 
             borderRadius: '5px' 
           }}>
-            Ul'dah & Thanalan Factions
-          </h4>
+            {regionName}
+          </h3>
           
           <div style={{ display: 'grid', gap: '15px' }}>
-            {allFactions['Ul\'dah & Thanalan'].map(faction => {
+            {factions.map(faction => {
               const rep = calculateFactionReputation(faction);
               const level = getReputationLevel(rep);
               const color = getReputationColor(rep);
+              const isSelected = selectedFactions.includes(faction.name);
+              const canSelect = selectedFactions.length < 2 || isSelected;
               
               return (
                 <div key={faction.name} style={{ 
                   padding: '15px', 
-                  border: `2px solid ${color}`, 
+                  border: `2px solid ${isSelected ? '#007bff' : color}`, 
                   borderRadius: '5px',
-                  backgroundColor: 'white'
+                  backgroundColor: isSelected ? '#f0f8ff' : 'white',
+                  position: 'relative'
                 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
-                    <div>
-                      <h5 style={{ margin: '0 0 5px 0', fontSize: '16px' }}>{faction.name}</h5>
-                      <p style={{ margin: '0', fontSize: '14px', color: '#666', lineHeight: '1.3' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '5px' }}>
+                        <h5 style={{ margin: '0', fontSize: '16px', marginRight: '10px' }}>
+                          {faction.name}
+                        </h5>
+                        <button
+                          onClick={() => handleFactionToggle(faction.name)}
+                          disabled={!canSelect}
+                          style={{
+                            padding: '4px 8px',
+                            fontSize: '12px',
+                            backgroundColor: isSelected ? '#dc3545' : '#007bff',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '3px',
+                            cursor: canSelect ? 'pointer' : 'not-allowed',
+                            opacity: canSelect ? 1 : 0.5
+                          }}
+                        >
+                          {isSelected ? 'Remove Bonus' : 'Add Bonus'}
+                        </button>
+                      </div>
+                      <p style={{ margin: '0 0 10px 0', fontSize: '14px', color: '#666' }}>
                         {faction.description}
                       </p>
-                    </div>
-                    <div style={{ textAlign: 'right', minWidth: '120px', marginLeft: '15px' }}>
-                      <div style={{ 
-                        fontSize: '18px', 
-                        fontWeight: 'bold', 
-                        color: color,
-                        marginBottom: '5px'
-                      }}>
-                        {rep > 0 ? '+' : ''}{rep}
-                      </div>
-                      <div style={{ 
-                        fontSize: '14px', 
-                        fontWeight: 'bold', 
-                        color: color,
-                        padding: '2px 8px',
-                        backgroundColor: `${color}20`,
-                        borderRadius: '3px'
-                      }}>
-                        {level}
-                      </div>
-                    </div>
-                  </div>
-                  
-                  {/* Show modifiers */}
-                  <div style={{ fontSize: '12px', color: '#666' }}>
-                    {faction.raceBonus.includes(data.race) && (
-                      <span style={{ color: '#28a745', marginRight: '15px' }}>
-                        ✓ Race Bonus: +20
-                      </span>
-                    )}
-                    {faction.originBonus.includes(data.origin) && (
-                      <span style={{ color: '#28a745', marginRight: '15px' }}>
-                        ✓ Origin Bonus: +20
-                      </span>
-                    )}
-                    {faction.originPenalty.includes(data.origin) && (
-                      <span style={{ color: '#dc3545', marginRight: '15px' }}>
-                        ✗ Origin Penalty: -20
-                      </span>
-                    )}
-                    {faction.special === 'amalj\'aa' && data.race === 'Amalj\'aa (Thanalan)' && (
-                      <span style={{ color: '#007bff', marginRight: '15px' }}>
-                        ★ Special Amalj'aa Bonus: +150
-                      </span>
-                    )}
-                    {faction.special === 'amalj\'aa' && data.race !== 'Amalj\'aa (Thanalan)' && (
-                      <span style={{ color: '#dc3545', marginRight: '15px' }}>
-                        ★ Non-Amalj'aa Penalty: -200
-                      </span>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
+                      
+                      {/* Show modifiers */}
+                      <div style={{ fontSize: '12px', color: '#666' }}>
+                       {faction.raceBonus.includes(data.race) && (
+                         <span style={{ color: '#28a745', marginRight: '15px' }}>
+                           ✓ Race Bonus: +20
+                         </span>
+                       )}
+                       {faction.originBonus.includes(data.origin) && (
+                         <span style={{ color: '#28a745', marginRight: '15px' }}>
+                           ✓ Origin Bonus: +20
+                         </span>
+                       )}
+                       {faction.originPenalty.includes(data.origin) && (
+                         <span style={{ color: '#dc3545', marginRight: '15px' }}>
+                           ✗ Origin Penalty: -20
+                         </span>
+                       )}
+                       {isSelected && (
+                         <span style={{ color: '#007bff', marginRight: '15px' }}>
+                           ★ Selected Bonus: +150
+                         </span>
+                       )}
+                       {faction.special === 'amalj\'aa' && data.race === 'Amalj\'aa (Thanalan)' && (
+                         <span style={{ color: '#007bff', marginRight: '15px' }}>
+                           ★ Special Amalj'aa Bonus: +150
+                         </span>
+                       )}
+                       {faction.special === 'amalj\'aa' && data.race !== 'Amalj\'aa (Thanalan)' && (
+                         <span style={{ color: '#dc3545', marginRight: '15px' }}>
+                           ★ Non-Amalj'aa Penalty: -200
+                         </span>
+                       )}
+                       {faction.special === 'kobold' && data.race === 'Kobold' && (
+                         <span style={{ color: '#007bff', marginRight: '15px' }}>
+                           ★ Special Kobold Bonus: +150
+                         </span>
+                       )}
+                       {faction.special === 'kobold' && data.origin === 'Limsa Lominsa & La Noscea' && data.race !== 'Kobold' && (
+                         <span style={{ color: '#dc3545', marginRight: '15px' }}>
+                           ★ Limsan Penalty: -200
+                         </span>
+                       )}
+                       {faction.special === 'sahagin' && data.race === 'Sahagin' && (
+                         <span style={{ color: '#007bff', marginRight: '15px' }}>
+                           ★ Special Sahagin Bonus: +150
+                         </span>
+                       )}
+                       {faction.special === 'sahagin' && data.origin === 'Limsa Lominsa & La Noscea' && data.race !== 'Sahagin' && (
+                         <span style={{ color: '#dc3545', marginRight: '15px' }}>
+                           ★ Limsan Penalty: -200
+                         </span>
+                       )}
+                       {faction.name === 'Sui-no-Sato' && !data.race.includes('Au Ra') && (
+                         <span style={{ color: '#dc3545', marginRight: '15px' }}>
+                           ✗ Non-Au Ra Penalty: -20
+                         </span>
+                       )}
+                       {faction.name === 'Hingan Government (Bakufu)' && data.origin !== 'Hingashi' && (
+                         <span style={{ color: '#dc3545', marginRight: '15px' }}>
+                           ✗ Non-Hingan Penalty: -20
+                         </span>
+                       )}
+                     </div>
+                   </div>
+                   
+                   <div style={{ textAlign: 'right', minWidth: '120px', marginLeft: '15px' }}>
+                     <div style={{ 
+                       fontSize: '18px', 
+                       fontWeight: 'bold', 
+                       color: color,
+                       marginBottom: '5px'
+                     }}>
+                       {rep > 0 ? '+' : ''}{rep}
+                     </div>
+                     <div style={{ 
+                       fontSize: '14px', 
+                       fontWeight: 'bold', 
+                       color: color,
+                       padding: '2px 8px',
+                       backgroundColor: `${color}20`,
+                       borderRadius: '3px'
+                     }}>
+                       {level}
+                     </div>
+                   </div>
+                 </div>
+               </div>
+             );
+           })}
+         </div>
+       </div>
+     ))}
 
-        <div style={{ 
-          padding: '15px', 
-          backgroundColor: '#f8f9fa', 
-          borderRadius: '5px',
-          fontStyle: 'italic',
-          color: '#666'
-        }}>
-          <strong>Note:</strong> More factions will be added in later versions of the beta.
-        </div>
-      </div>
+     {/* Reputation Tracking Notes */}
+     <div style={{ 
+       marginBottom: '30px', 
+       padding: '15px', 
+       backgroundColor: '#e9ecef', 
+       borderRadius: '5px' 
+     }}>
+       <h4 style={{ margin: '0 0 10px 0' }}>Reputation Tracking Notes</h4>
+       <ul style={{ margin: 0, paddingLeft: '20px' }}>
+         <li>Reputation may be earned through RP, influence point investment, event participation, or story arcs.</li>
+         <li>Staff may assign reputation shifts during faction events based on character behavior and narrative impact.</li>
+         <li>Faction leaders (PC or NPC) may petition staff to shift someone's standing within their group.</li>
+         <li>Players may begin with a predefined reputation based on their race, region, or background.</li>
+       </ul>
+     </div>
 
-      <button 
-        onClick={onNext}
-        style={{ 
-          padding: '12px 24px', 
-          fontSize: '16px',
-          backgroundColor: '#007bff',
-          color: 'white',
-          border: 'none',
-          borderRadius: '5px',
-          cursor: 'pointer'
-        }}
-      >
-        Continue to Non-Combat Stats
-      </button>
-    </div>
-  );
-}
-
-
-
+     <div style={{ display: 'flex', gap: '10px' }}>
+       <button 
+         onClick={onBack}
+         style={{ 
+           padding: '12px 24px', 
+           fontSize: '16px',
+           backgroundColor: '#6c757d',
+           color: 'white',
+           border: 'none',
+           borderRadius: '5px',
+           cursor: 'pointer'
+         }}
+       >
+         ← Back to Character Basics
+       </button>
+       
+       <button 
+         onClick={onNext}
+         style={{ 
+           padding: '12px 24px', 
+           fontSize: '16px',
+           backgroundColor: '#007bff',
+           color: 'white',
+           border: 'none',
+           borderRadius: '5px',
+           cursor: 'pointer'
+         }}
+       >
+         Continue to Non-Combat Stats
+       </button>
+     </div>
+   </div>
+ );
+} 
 
 
 
