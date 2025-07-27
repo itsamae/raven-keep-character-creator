@@ -1608,7 +1608,7 @@ function NonCombatStatsStep({ data, setData, onNext, onBack }) {
   const updateSubDomain = (subDomainName, newValue) => {
   if (newValue < -3 || newValue > 10) return;
   
-  const currentValue = subDomains[subDomainName] || -3;
+  const currentValue = subDomains.hasOwnProperty(subDomainName) ? subDomains[subDomainName] : -3;
   const currentCost = getStatCost(currentValue);
   const newCost = getStatCost(newValue);
   const costDifference = newCost - currentCost;
