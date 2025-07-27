@@ -426,7 +426,7 @@ function CombatStatsStep({ data, setData, onNext }) {
   }
   
   if (value === -3) {
-    return "No AP - cannot use abilities";
+    return "No AP - cannot use spells, skills, or consumables";
   } else {
     return `Start with ${startingAP} AP, recover ${gainPerTurn} AP per turn`;
   }
