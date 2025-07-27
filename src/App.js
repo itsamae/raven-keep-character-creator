@@ -23,11 +23,13 @@ function App() {
         {currentStep === 7 && " Character Summary"}
       </div>
       
-      {currentStep === 1 && <WelcomeStep onNext={() => setCurrentStep(2)} />}
-      {currentStep === 2 && <CharacterBasicsStep data={characterData} setData={setCharacterData} onNext={() => setCurrentStep(3)} />}
-      {currentStep === 3 && <DepartmentSelectionStep data={characterData} setData={setCharacterData} onNext={() => setCurrentStep(4)} />}
-      {currentStep === 4 && <div>Combat Stats (Coming Soon)</div>}
-    </div>
+<div>
+  <p>Debug: Current step is {currentStep}</p>
+  {currentStep === 1 && <WelcomeStep onNext={() => setCurrentStep(2)} />}
+  {currentStep === 2 && <CharacterBasicsStep data={characterData} setData={setCharacterData} onNext={() => setCurrentStep(3)} />}
+  {currentStep === 3 && <DepartmentSelectionStep data={characterData} setData={setCharacterData} onNext={() => setCurrentStep(4)} />}
+  {currentStep === 4 && <div>Combat Stats (Coming Soon)</div>}
+</div>
   );
 }
 
