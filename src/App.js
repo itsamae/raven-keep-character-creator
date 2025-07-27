@@ -1590,7 +1590,7 @@ function NonCombatStatsStep({ data, setData, onNext, onBack }) {
   const getSubDomainPointsForDomain = (domainKey) => {
     const domain = domainDefinitions[domainKey];
     return domain.subDomains.reduce((total, subDomainKey) => {
-      const value = subDomains[subDomainKey] || -3;
+      const value = subDomains[subDomainKey] ?? -3;
       if (value > -3) {
         return total + getStatCost(value);
       }
@@ -1625,6 +1625,8 @@ function NonCombatStatsStep({ data, setData, onNext, onBack }) {
   const updateSubDomain = (domainKey, subDomainName, newValue) => {
     if (newValue < -3 || newValue > 10) return;
     
+    console.log(`Updating ${subDomainName} from ${subDomains[subDomainName] ?? -3} to ${newValue}`);
+    
     // Create new sub-domains object with the updated value
     const newSubDomains = { ...subDomains };
     if (newValue === -3) {
@@ -1634,20 +1636,32 @@ function NonCombatStatsStep({ data, setData, onNext, onBack }) {
       newSubDomains[subDomainName] = newValue;
     }
     
+    // Debug: Check if the value was set correctly
+    console.log(`Set ${subDomainName} to:`, newSubDomains[subDomainName]);
+    
     // Calculate points spent for this specific domain
     const domainSubDomains = domainDefinitions[domainKey].subDomains;
     const newDomainSubPointsSpent = domainSubDomains.reduce((total, subDKey) => {
-      const value = newSubDomains[subDKey] || -3;
+      const value = newSubDomains[subDKey] ?? -3;
       if (value > -3) {
-        return total + getStatCost(value);
+        const cost = getStatCost(value);
+        if (subDKey === subDomainName) {
+          console.log(`${subDKey}: value=${value}, cost=${cost}`);
+        }
+        return total + cost;
       }
       return total;
     }, 0);
     
     const availableForDomain = getAvailableSubDomainPoints(domainKey);
     
+    console.log(`Domain: ${domainKey}, Points spent: ${newDomainSubPointsSpent}, Available: ${availableForDomain}`);
+    
     if (newDomainSubPointsSpent <= availableForDomain) {
       setData(prev => ({ ...prev, subDomains: newSubDomains }));
+      console.log('Update successful');
+    } else {
+      console.log('Update rejected - not enough points');
     }
   };
 
@@ -1861,7 +1875,7 @@ function NonCombatStatsStep({ data, setData, onNext, onBack }) {
               <h4 style={{ margin: '0 0 15px 0', color: '#555' }}>Sub-Domain Specializations</h4>
               <div style={{ display: 'grid', gap: '10px' }}>
                 {domain.subDomains.map(subDomainKey => {
-                  const subDomainValue = subDomains[subDomainKey] || -3;
+                  const subDomainValue = subDomains[subDomainKey] ?? -3;
                   const subDomainModifier = getStatModifier(subDomainValue);
                   const trainingStatus = getTrainingStatus(subDomainValue);
                   const isDisabled = domainValue <= -3;
