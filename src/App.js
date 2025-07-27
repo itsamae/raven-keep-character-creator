@@ -301,7 +301,7 @@ function CombatStatsStep({ data, setData, onNext }) {
     return total + getStatCost(statValue);
   }, 0);
 
-  const pointsRemaining = 20 - pointsSpent;
+  const pointsRemaining = 50 - pointsSpent;
 
   const updateStat = (statName, newValue) => {
     if (newValue < -3 || newValue > 10) return;
@@ -311,7 +311,7 @@ function CombatStatsStep({ data, setData, onNext }) {
       return total + getStatCost(statValue);
     }, 0);
     
-    if (newPointsSpent <= 20) {
+    if (newPointsSpent <= 50) {
       setData(prev => ({ ...prev, combatStats: newStats }));
     }
   };
@@ -396,7 +396,7 @@ function CombatStatsStep({ data, setData, onNext }) {
   return (
     <div>
       <h2>Combat Stats Allocation</h2>
-      <p>Allocate your 20 combat stat points. All stats start at -3.</p>
+      <p>Allocate your 50 combat stat points. All stats start at -3.</p>
       
       <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#f8f9fa', border: '1px solid #ddd', borderRadius: '5px' }}>
         <strong>Points Remaining: {pointsRemaining}</strong>
