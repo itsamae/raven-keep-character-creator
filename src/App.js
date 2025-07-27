@@ -379,8 +379,57 @@ function CombatStatsStep({ data, setData, onNext }) {
         return `+${value * 20} bonus to healing rolls`;
       
       case 'recovery':
-        const apRecovery = 2 + value;
-        return `Recover ${apRecovery} AP per turn`;
+  let startingAP, gainPerTurn;
+  
+  if (value === -3) {
+    startingAP = 0;
+    gainPerTurn = 0;
+  } else if (value === -2) {
+    startingAP = 1;
+    gainPerTurn = 1;
+  } else if (value === -1) {
+    startingAP = 2;
+    gainPerTurn = 1;
+  } else if (value === 0) {
+    startingAP = 3;
+    gainPerTurn = 1;
+  } else if (value === 1) {
+    startingAP = 4;
+    gainPerTurn = 1;
+  } else if (value === 2) {
+    startingAP = 5;
+    gainPerTurn = 1;
+  } else if (value === 3) {
+    startingAP = 5;
+    gainPerTurn = 2;
+  } else if (value === 4) {
+    startingAP = 5;
+    gainPerTurn = 3;
+  } else if (value === 5) {
+    startingAP = 6;
+    gainPerTurn = 3;
+  } else if (value === 6) {
+    startingAP = 7;
+    gainPerTurn = 3;
+  } else if (value === 7) {
+    startingAP = 7;
+    gainPerTurn = 4;
+  } else if (value === 8) {
+    startingAP = 8;
+    gainPerTurn = 4;
+  } else if (value === 9) {
+    startingAP = 9;
+    gainPerTurn = 4;
+  } else if (value === 10) {
+    startingAP = 10;
+    gainPerTurn = 4;
+  }
+  
+  if (value === -3) {
+    return "No AP - cannot use abilities";
+  } else {
+    return `Start with ${startingAP} AP, recover ${gainPerTurn} AP per turn`;
+  }
       
       default:
         return "";
