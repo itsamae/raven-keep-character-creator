@@ -1606,19 +1606,21 @@ function NonCombatStatsStep({ data, setData, onNext, onBack }) {
   };
 
   const updateSubDomain = (subDomainName, newValue) => {
-    const clampedValue = Math.max(-3, Math.min(10, newValue));
-    const currentValue = subDomains[subDomainName] ?? -3;
-    if (clampedValue === currentValue) return;
+  if (newValue < -3 || newValue > 10) return;
+  const newSubDomains = { ...subDomains, [subDomainName]: newValue };
+  const totalSubDomainCost = Object.values(newSubDomains).reduce((total, val) => {
+    return total + getStatCost(val);
+  }, 0);
 
-    const deltaCost = getPointCostDelta(currentValue, clampedValue);
-    const available = getAvailableSubDomainPoints();
-    const spent = getSubDomainPointsSpent(subDomains);
+  const available = getAvailableSubDomainPoints();
 
-    if (spent + deltaCost <= available) {
-      const newSubDomains = { ...subDomains, [subDomainName]: clampedValue };
-      setData(prev => ({ ...prev, subDomains: newSubDomains }));
-    }
-  };
+  if (totalSubDomainCost <= available) {
+    setData(prev => ({
+      ...prev,
+      subDomains: newSubDomains
+    }));
+  }
+};
 
   const resetStats = () => {
     const resetDomains = {
