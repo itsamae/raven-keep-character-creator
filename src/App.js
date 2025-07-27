@@ -3479,5 +3479,228 @@ function CombatStatsStep({ data, setData, onNext, onBack }) {
   );
 }
 
+// Step 8: Character Overview
+function CharacterOverviewStep({ data, onBack }) {
+  const getStatModifier = (value) => {
+    if (value === -3) return -200;
+    if (value === -2) return -100;
+    if (value === -1) return -50;
+    if (value === 0) return 0;
+    return value * 20;
+  };
+
+  const getReputationLevel = (rep) => {
+    if (rep <= -301) return 'Hated';
+    if (rep <= -101) return 'Distrusted';
+    if (rep <= -1) return 'Tolerated';
+    if (rep === 0) return 'Unknown';
+    if (rep <= 150) return 'Recognized';
+    if (rep <= 350) return 'Trusted';
+    return 'Agent';
+  };
+
+  const tierNames = ['Dabbler', 'Apprentice', 'Journeyman', 'Expert', 'Grandmaster'];
+
+  return (
+    <div>
+      <h2>Character Overview</h2>
+      <p>Thank you for participating in the RKC 2.0 Beta! Here's your completed character:</p>
+      
+      {/* Beta Notice */}
+      <div style={{ 
+        marginBottom: '30px', 
+        padding: '20px', 
+        backgroundColor: '#fff3cd', 
+        border: '1px solid #ffeaa7', 
+        borderRadius: '5px' 
+      }}>
+        <h3 style={{ margin: '0 0 15px 0', color: '#856404' }}>Important Beta Notes</h3>
+        <p style={{ marginBottom: '10px' }}>
+          <strong>This is a modular beta system:</strong> Currently, selections like backgrounds don't automatically 
+          modify your stats because this isn't connected to a database. In the final system, your background 
+          choices would automatically adjust your stats, gil, and reputation as described.
+        </p>
+        <p style={{ marginBottom: '0' }}>
+          <strong>Coming in future beta versions:</strong>
+        </p>
+        <ul style={{ marginTop: '5px' }}>
+          <li>Skill trees and abilities system</li>
+          <li>Starting equipment selection</li>
+          <li>Additional backgrounds and lifestyles</li>
+          <li>Automatic stat calculation from backgrounds</li>
+          <li>Full faction reputation system integration</li>
+        </ul>
+      </div>
+
+      {/* Character Basics */}
+      <div style={{ marginBottom: '25px', padding: '15px', backgroundColor: '#f8f9fa', borderRadius: '5px' }}>
+        <h3 style={{ margin: '0 0 15px 0' }}>Character Basics</h3>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+          <div><strong>Name:</strong> {data.name || 'Not specified'}</div>
+          <div><strong>Age:</strong> {data.age || 'Not specified'}</div>
+          <div><strong>Origin:</strong> {data.origin || 'Not specified'}</div>
+          <div><strong>Race:</strong> {data.race || 'Not specified'}</div>
+          <div><strong>Department:</strong> {data.department || 'Not specified'}</div>
+        </div>
+      </div>
+
+      {/* Reputation Summary */}
+      {data.reputation && Object.keys(data.reputation).length > 0 && (
+        <div style={{ marginBottom: '25px', padding: '15px', backgroundColor: '#f8f9fa', borderRadius: '5px' }}>
+          <h3 style={{ margin: '0 0 15px 0' }}>Starting Reputation (Sample Factions)</h3>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px' }}>
+            {Object.entries(data.reputation).slice(0, 6).map(([faction, rep]) => (
+              <div key={faction} style={{ fontSize: '14px' }}>
+                <strong>{faction}:</strong> {rep > 0 ? '+' : ''}{rep} ({getReputationLevel(rep)})
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Non-Combat Stats */}
+      <div style={{ marginBottom: '25px', padding: '15px', backgroundColor: '#f8f9fa', borderRadius: '5px' }}>
+        <h3 style={{ margin: '0 0 15px 0' }}>Domain Stats</h3>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
+          {Object.entries(data.domains || {}).map(([domain, value]) => (
+            <div key={domain} style={{ fontSize: '14px' }}>
+              <strong>{domain.charAt(0).toUpperCase() + domain.slice(1)}:</strong> {value} ({getStatModifier(value) >= 0 ? '+' : ''}{getStatModifier(value)})
+            </div>
+          ))}
+        </div>
+        
+        {data.subDomains && Object.keys(data.subDomains).length > 0 && (
+          <div style={{ marginTop: '15px' }}>
+            <h4 style={{ margin: '0 0 10px 0' }}>Trained Sub-Domains</h4>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '5px' }}>
+              {Object.entries(data.subDomains)
+                .filter(([_, value]) => value > 0)
+                .map(([subdomain, value]) => (
+                <div key={subdomain} style={{ fontSize: '12px' }}>
+                  <strong>{subdomain}:</strong> {value} ({getStatModifier(value) >= 0 ? '+' : ''}{getStatModifier(value)})
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Backgrounds */}
+      {data.backgrounds && data.backgrounds.length > 0 && (
+        <div style={{ marginBottom: '25px', padding: '15px', backgroundColor: '#f8f9fa', borderRadius: '5px' }}>
+          <h3 style={{ margin: '0 0 15px 0' }}>Backgrounds</h3>
+          <div style={{ display: 'grid', gap: '5px' }}>
+            {data.backgrounds.map(bg => (
+              <div key={bg.id} style={{ fontSize: '14px' }}>
+                • {bg.name} {bg.cost ? `(-${bg.cost} points)` : `(+${bg.points} points)`}
+                {bg.selection && (
+                  <span style={{ color: '#666', marginLeft: '10px' }}>
+                    → {Array.isArray(bg.selection) ? bg.selection.join(', ') : bg.selection}
+                  </span>
+                )}
+              </div>
+            ))}
+          </div>
+          <div style={{ marginTop: '10px', fontSize: '12px', color: '#666' }}>
+            Points spent: {data.backgroundPointsSpent || 0} / 200
+          </div>
+        </div>
+      )}
+
+      {/* Lifestyles */}
+      {data.lifestyles && Object.keys(data.lifestyles).length > 0 && (
+        <div style={{ marginBottom: '25px', padding: '15px', backgroundColor: '#f8f9fa', borderRadius: '5px' }}>
+          <h3 style={{ margin: '0 0 15px 0' }}>Lifestyles</h3>
+          <div style={{ display: 'grid', gap: '5px' }}>
+            {Object.entries(data.lifestyles).map(([id, level]) => (
+              <div key={id} style={{ fontSize: '14px' }}>
+                • {id.charAt(0).toUpperCase() + id.slice(1).replace(/([A-Z])/g, ' $1')}: {tierNames[level - 1]} (Tier {level})
+              </div>
+            ))}
+          </div>
+          <div style={{ marginTop: '10px', fontSize: '12px', color: '#666' }}>
+            Points spent: {Object.values(data.lifestyles).reduce((total, level) => total + level, 0)} / {data.lifestylePoints || 5}
+          </div>
+        </div>
+      )}
+
+      {/* Combat Stats */}
+      <div style={{ marginBottom: '25px', padding: '15px', backgroundColor: '#f8f9fa', borderRadius: '5px' }}>
+        <h3 style={{ margin: '0 0 15px 0' }}>Combat Stats</h3>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px' }}>
+          {Object.entries(data.combatStats || {}).map(([stat, value]) => (
+            <div key={stat} style={{ fontSize: '14px' }}>
+              <strong>{stat.charAt(0).toUpperCase() + stat.slice(1).replace(/([A-Z])/g, ' $1')}:</strong> {value} ({getStatModifier(value) >= 0 ? '+' : ''}{getStatModifier(value)})
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Feedback Reminder */}
+      <div style={{ 
+        marginBottom: '30px', 
+        padding: '20px', 
+        backgroundColor: '#d1ecf1', 
+        border: '1px solid #bee5eb', 
+        borderRadius: '5px' 
+      }}>
+        <h3 style={{ margin: '0 0 15px 0', color: '#0c5460' }}>Next Steps</h3>
+        <p style={{ marginBottom: '15px' }}>
+          <strong>Don't forget to fill out the feedback form!</strong> Your input is crucial for improving the system. 
+          If you don't complete the feedback form, you'll be asked to sit out the next beta test.
+        </p>
+        <p style={{ marginBottom: '0' }}>
+          We'll be going through the feedback form together panel by panel to discuss your experience 
+          with each part of character creation.
+        </p>
+      </div>
+
+      <div style={{ display: 'flex', gap: '10px' }}>
+        <button 
+          onClick={onBack}
+          style={{ 
+            padding: '12px 24px', 
+            fontSize: '16px',
+            backgroundColor: '#6c757d',
+            color: 'white',
+            border: 'none',
+            borderRadius: '5px',
+            cursor: 'pointer'
+          }}
+        >
+          ← Back to Combat Stats
+        </button>
+        
+        <button 
+          onClick={() => alert('Feedback form would open here in the actual system!')}
+          style={{ 
+            padding: '12px 24px', 
+            fontSize: '16px',
+            backgroundColor: '#28a745',
+            color: 'white',
+            border: 'none',
+            borderRadius: '5px',
+            cursor: 'pointer'
+          }}
+        >
+          Continue to Feedback Form
+        </button>
+      </div>
+
+      <div style={{ 
+        marginTop: '30px', 
+        padding: '15px', 
+        backgroundColor: '#e9ecef', 
+        borderRadius: '5px',
+        textAlign: 'center'
+      }}>
+        <p style={{ margin: '0', fontSize: '16px', fontWeight: 'bold' }}>
+          Thank you for participating in the RKC 2.0 Beta! 🎉
+        </p>
+      </div>
+    </div>
+  );
+}
+
 
 export default App;
