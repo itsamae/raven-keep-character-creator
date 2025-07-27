@@ -1637,14 +1637,6 @@ const resetStats = (setData) => {
   setData(prev => ({ ...prev, domains: resetDomains, subDomains: {} }));
 };
 
-  const getStatModifier = (value) => {
-    if (value === -3) return -200;
-    if (value === -2) return -100;
-    if (value === -1) return -50;
-    if (value === 0) return 0;
-    return value * 20;
-  };
-
   const getTrainingStatus = (value) => {
     return value >= 1 ? 'Trained' : 'Untrained';
   };
