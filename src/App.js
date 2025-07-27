@@ -316,6 +316,20 @@ function CombatStatsStep({ data, setData, onNext }) {
     }
   };
 
+  // Reset all stats to -3
+  const resetStats = () => {
+    const resetStats = {
+      strength: -3,
+      magicalPower: -3,
+      dexterity: -3,
+      speed: -3,
+      endurance: -3,
+      healingPower: -3,
+      recovery: -3
+    };
+    setData(prev => ({ ...prev, combatStats: resetStats }));
+  };
+
   // Get stat effects for display
   const getStatEffects = (statName, value) => {
     switch (statName) {
@@ -396,11 +410,37 @@ function CombatStatsStep({ data, setData, onNext }) {
   return (
     <div>
       <h2>Combat Stats Allocation</h2>
-      <p>Allocate your 80 combat stat points. All stats start at -3.</p>
+      <p>Allocate your 80 combat stat points. All stats start at -3. You don't have to spend all points - any remaining points can be saved for future level-ups.</p>
       
-      <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#f8f9fa', border: '1px solid #ddd', borderRadius: '5px' }}>
-        <strong>Points Remaining: {pointsRemaining}</strong>
-        {pointsRemaining < 0 && <span style={{ color: 'red' }}> (Over limit!)</span>}
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center',
+        marginBottom: '20px', 
+        padding: '15px', 
+        backgroundColor: '#f8f9fa', 
+        border: '1px solid #ddd', 
+        borderRadius: '5px' 
+      }}>
+        <div>
+          <strong>Points Spent: {pointsSpent} / 80</strong>
+          <br />
+          <span style={{ color: '#666' }}>Points Remaining: {pointsRemaining}</span>
+        </div>
+        <button 
+          onClick={resetStats}
+          style={{ 
+            padding: '8px 16px', 
+            fontSize: '14px',
+            backgroundColor: '#6c757d',
+            color: 'white',
+            border: 'none',
+            borderRadius: '5px',
+            cursor: 'pointer'
+          }}
+        >
+          Reset All Stats
+        </button>
       </div>
 
       {Object.entries(combatStats).map(([statName, value]) => (
@@ -480,23 +520,22 @@ function CombatStatsStep({ data, setData, onNext }) {
 
       <button 
         onClick={onNext}
-        disabled={pointsRemaining !== 0}
         style={{ 
           padding: '12px 24px', 
           fontSize: '16px',
-          backgroundColor: pointsRemaining === 0 ? '#007bff' : '#ccc',
+          backgroundColor: '#007bff',
           color: 'white',
           border: 'none',
           borderRadius: '5px',
-          cursor: pointsRemaining === 0 ? 'pointer' : 'not-allowed'
+          cursor: 'pointer'
         }}
       >
         Continue to Non-Combat Stats
       </button>
       
-      {pointsRemaining !== 0 && (
-        <p style={{ color: '#dc3545', marginTop: '10px' }}>
-          You must spend all 20 points to continue.
+      {pointsRemaining > 0 && (
+        <p style={{ color: '#28a745', marginTop: '10px' }}>
+          💡 You have {pointsRemaining} points remaining that will be saved for future level-ups.
         </p>
       )}
     </div>
