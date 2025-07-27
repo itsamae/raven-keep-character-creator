@@ -1893,8 +1893,9 @@ function NonCombatStatsStep({ data, setData, onNext, onBack }) {
                                 cursor: (subDomainValue < 10 && subDomainPointsRemaining > 0) ? 'pointer' : 'not-allowed'
                               }}
                             >
-                              +
-                            </button>
+                            +
+                          </button>
+
                           </div>
                         </div>
                         <div style={{ fontSize: '11px', color: '#888', marginTop: '3px' }}>
